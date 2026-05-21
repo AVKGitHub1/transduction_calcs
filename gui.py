@@ -1,3 +1,5 @@
+import csv
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -7,11 +9,13 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
     QDoubleSpinBox,
+    QFileDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -27,7 +31,7 @@ INPUT_LABELS = {
     "kappaOpt": "kappaOpt (MHz)",
     "kappaMM": "kappaMM (MHz)",
     "Natoms": "Natoms",
-    "AtomRadius": "AtomRadius (m)",
+    "AtomRadius": "AtomRadius (um)",
     "gammaOpt": "gammaOpt (MHz)",
     "gammaMM": "gammaMM (kHz)",
     "PowerUV": "PowerUV (mW)",
@@ -102,7 +106,7 @@ class TransductionGui(QMainWindow):
                 "Atom Parameters",
                 [
                     ("Natoms", 5e5, 1.0, 1e10, 1e4),
-                    ("AtomRadius", 250e-6, 1e-9, 1.0, 10e-6),
+                    ("AtomRadius", 250.0, 0.001, 1e6, 10.0),
                     ("gammaOpt", 6.0, 1e-6, 1e4, 0.1),
                     ("gammaMM", 100.0, 0.001, 1e7, 1.0),
                 ],
@@ -121,6 +125,7 @@ class TransductionGui(QMainWindow):
                 ],
             )
         )
+        layout.addWidget(self._make_actions_group())
 
         return panel
 
@@ -141,8 +146,118 @@ class TransductionGui(QMainWindow):
 
         return group
 
+    def _make_actions_group(self):
+        group = QGroupBox("Files")
+        layout = QVBoxLayout(group)
+
+        export_button = QPushButton("Export Parameters CSV")
+        export_button.clicked.connect(self.export_parameters_csv)
+        layout.addWidget(export_button)
+
+        import_button = QPushButton("Import Parameters CSV")
+        import_button.clicked.connect(self.import_parameters_csv)
+        layout.addWidget(import_button)
+
+        save_with_text_button = QPushButton("Save Graph With Textbox")
+        save_with_text_button.clicked.connect(
+            lambda: self.save_graph(show_stats=True)
+        )
+        layout.addWidget(save_with_text_button)
+
+        save_without_text_button = QPushButton("Save Graph Without Textbox")
+        save_without_text_button.clicked.connect(
+            lambda: self.save_graph(show_stats=False)
+        )
+        layout.addWidget(save_without_text_button)
+
+        save_all_button = QPushButton("Save All")
+        save_all_button.clicked.connect(self.save_all)
+        layout.addWidget(save_all_button)
+
+        return group
+
     def values(self):
         return {name: spin_box.value() for name, spin_box in self.inputs.items()}
+
+    def _path_with_extension(self, file_path, selected_filter, fallback_extension):
+        path = Path(file_path)
+        if path.suffix:
+            return str(path)
+
+        filter_text = selected_filter.lower()
+        for extension in (".png", ".pdf", ".svg", ".csv"):
+            if extension[1:] in filter_text:
+                return str(path.with_suffix(extension))
+
+        return str(path.with_suffix(fallback_extension))
+
+    def export_parameters_csv(self):
+        file_path, selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Export Parameters",
+            "transduction_parameters.csv",
+            "CSV Files (*.csv);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        file_path = self._path_with_extension(file_path, selected_filter, ".csv")
+        try:
+            self._write_parameters_csv(file_path)
+            self.status_label.setText(f"Exported parameters to {file_path}")
+        except Exception as exc:
+            self.status_label.setText(f"Parameter export failed: {exc}")
+
+    def _write_parameters_csv(self, file_path):
+        with open(file_path, "w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=["name", "label", "value"])
+            writer.writeheader()
+            for name, spin_box in self.inputs.items():
+                writer.writerow(
+                    {
+                        "name": name,
+                        "label": INPUT_LABELS.get(name, name),
+                        "value": f"{spin_box.value():.12g}",
+                    }
+                )
+
+    def import_parameters_csv(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import Parameters",
+            "",
+            "CSV Files (*.csv);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, newline="", encoding="utf-8-sig") as csv_file:
+                reader = csv.DictReader(csv_file)
+                updated_count = 0
+                for row in reader:
+                    name = (row.get("name") or row.get("parameter") or "").strip()
+                    if name not in self.inputs:
+                        continue
+
+                    value_text = (row.get("value") or "").strip()
+                    if not value_text:
+                        continue
+
+                    spin_box = self.inputs[name]
+                    spin_box.blockSignals(True)
+                    spin_box.setValue(float(value_text))
+                    spin_box.blockSignals(False)
+                    updated_count += 1
+
+            self.update_plot()
+            self.status_label.setText(
+                f"Imported {updated_count} parameters from {file_path}"
+            )
+        except Exception as exc:
+            for spin_box in self.inputs.values():
+                spin_box.blockSignals(False)
+            self.status_label.setText(f"Parameter import failed: {exc}")
 
     def calculate_params(self):
         values = self.values()
@@ -193,20 +308,144 @@ class TransductionGui(QMainWindow):
             "epsilon": 1.0,
         }
 
+    def _calculate_fwhm(self, omega, eta, peak_index):
+        half_max = eta[peak_index] / 2.0
+
+        def crossing_between(first_index, second_index):
+            x0 = omega[first_index]
+            x1 = omega[second_index]
+            y0 = eta[first_index]
+            y1 = eta[second_index]
+            if y1 == y0:
+                return x0
+            return x0 + (half_max - y0) * (x1 - x0) / (y1 - y0)
+
+        left_index = peak_index
+        while left_index > 0 and eta[left_index] >= half_max:
+            left_index -= 1
+
+        if left_index == 0 and eta[left_index] >= half_max:
+            left_crossing = omega[0]
+        else:
+            left_crossing = crossing_between(left_index, left_index + 1)
+
+        right_index = peak_index
+        last_index = len(eta) - 1
+        while right_index < last_index and eta[right_index] >= half_max:
+            right_index += 1
+
+        if right_index == last_index and eta[right_index] >= half_max:
+            right_crossing = omega[-1]
+        else:
+            right_crossing = crossing_between(right_index - 1, right_index)
+
+        return right_crossing - left_crossing
+
+    def _calculate_plot_data(self):
+        params = self.calculate_params()
+        omega = np.linspace(-10.0, 10.0, 1000)
+        eta = efficiency_func(omega, **params)
+        peak_index = int(np.nanargmax(eta))
+        max_eff = eta[peak_index] * 100.0
+        fwhm = self._calculate_fwhm(omega, eta, peak_index)
+        return omega, eta, max_eff, fwhm
+
+    def _draw_efficiency_plot(self, ax, omega, eta, max_eff, fwhm, show_stats):
+        ax.clear()
+        ax.plot(omega, eta)
+        ax.fill_between(omega, eta, 0, alpha=0.25)
+        if show_stats:
+            ax.text(
+                0.03,
+                0.95,
+                f"Maximum Efficiency = {max_eff:.3f}%\nBandwidth = {fwhm:.3f} MHz",
+                transform=ax.transAxes,
+                ha="left",
+                va="top",
+                bbox={
+                    "boxstyle": "round,pad=0.35",
+                    "facecolor": "white",
+                    "edgecolor": "0.75",
+                    "alpha": 0.85,
+                },
+            )
+        ax.set_ylim(0, 1)
+        ax.set_xlim(-10, 10)
+        ax.set_xlabel("Photon Cavity Detuning [MHz]", fontsize=14)
+        ax.set_ylabel("Conversion Efficiency", fontsize=14)
+        ax.grid(True, alpha=0.3)
+
+    def save_graph(self, show_stats):
+        suffix = "with_textbox" if show_stats else "without_textbox"
+        file_path, selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Save Graph",
+            f"transduction_efficiency_{suffix}.png",
+            "PNG Images (*.png);;PDF Files (*.pdf);;SVG Files (*.svg);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        file_path = self._path_with_extension(file_path, selected_filter, ".png")
+        try:
+            self._save_graph_file(file_path, show_stats)
+            self.status_label.setText(f"Saved graph to {file_path}")
+        except Exception as exc:
+            self.status_label.setText(f"Graph save failed: {exc}")
+
+    def _save_graph_file(self, file_path, show_stats, plot_data=None):
+        if plot_data is None:
+            plot_data = self._calculate_plot_data()
+
+        omega, eta, max_eff, fwhm = plot_data
+        figure = Figure(figsize=(7, 4.5))
+        ax = figure.add_subplot(111)
+        self._draw_efficiency_plot(ax, omega, eta, max_eff, fwhm, show_stats)
+        figure.tight_layout()
+        figure.savefig(file_path, dpi=300)
+
+    def save_all(self):
+        file_path, selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Save All",
+            "transduction_efficiency.png",
+            "PNG Images (*.png);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        plot_path = Path(
+            self._path_with_extension(file_path, selected_filter, ".png")
+        )
+        base_path = plot_path.with_suffix("")
+
+        plot_no_legend_path = base_path.with_name(
+            f"{base_path.name}_noLegend"
+        ).with_suffix(".png")
+        params_path = base_path.with_name(f"{base_path.name}_params").with_suffix(
+            ".csv"
+        )
+
+        try:
+            plot_data = self._calculate_plot_data()
+            self._save_graph_file(plot_path, show_stats=True, plot_data=plot_data)
+            self._save_graph_file(
+                plot_no_legend_path,
+                show_stats=False,
+                plot_data=plot_data,
+            )
+            self._write_parameters_csv(params_path)
+            self.status_label.setText(
+                "Saved all files: "
+                f"{plot_path}, {plot_no_legend_path}, {params_path}"
+            )
+        except Exception as exc:
+            self.status_label.setText(f"Save all failed: {exc}")
+
     def update_plot(self):
         try:
-            params = self.calculate_params()
-            omega = np.linspace(-10.0, 10.0, 1000)
-            eta = efficiency_func(omega, **params)
-
-            self.ax.clear()
-            self.ax.plot(omega, eta)
-            self.ax.fill_between(omega, eta, 0, alpha=0.25)
-            self.ax.set_ylim(0, 1)
-            self.ax.set_xlim(-10, 10)
-            self.ax.set_xlabel("780 nm Photon Cavity Detuning [MHz]", fontsize=14)
-            self.ax.set_ylabel("Conversion Efficiency", fontsize=14)
-            self.ax.grid(True, alpha=0.3)
+            omega, eta, max_eff, fwhm = self._calculate_plot_data()
+            self._draw_efficiency_plot(self.ax, omega, eta, max_eff, fwhm, True)
             self.figure.tight_layout()
             self.status_label.setText("")
         except Exception as exc:
