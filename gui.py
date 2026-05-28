@@ -8,6 +8,7 @@ from matplotlib.figure import Figure
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
+    QComboBox,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
@@ -21,9 +22,15 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from helper_funcs import efficiency_func
+from helper_funcs import efficiency_func_OtoM, efficiency_func_MtoO, efficiency_func_2
 from rabi_freq import rabi_frequency_Rb85_fs
 
+
+EFFICIENCY_FUNCTIONS = {
+    "OtoM": ("Optical to Microwave", efficiency_func_OtoM),
+    "MtoO": ("Microwave to Optical", efficiency_func_MtoO),
+    "func_2": ("Efficiency Function 2", efficiency_func_2),
+}
 
 INPUT_LABELS = {
     "gopt": "gopt (kHz)",
@@ -59,6 +66,7 @@ class TransductionGui(QMainWindow):
 
         self.setWindowTitle("Transduction GUI")
         self.inputs = {}
+        self.efficiency_combo = None
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
 
@@ -125,6 +133,7 @@ class TransductionGui(QMainWindow):
                 ],
             )
         )
+        layout.addWidget(self._make_efficiency_group())
         layout.addWidget(self._make_actions_group())
 
         return panel
@@ -143,6 +152,18 @@ class TransductionGui(QMainWindow):
             spin_box.valueChanged.connect(self.update_plot)
             self.inputs[name] = spin_box
             form.addRow(INPUT_LABELS.get(name, name), spin_box)
+
+        return group
+
+    def _make_efficiency_group(self):
+        group = QGroupBox("Efficiency Function")
+        form = QFormLayout(group)
+
+        self.efficiency_combo = QComboBox()
+        for key, (label, _) in EFFICIENCY_FUNCTIONS.items():
+            self.efficiency_combo.addItem(label, key)
+        self.efficiency_combo.currentIndexChanged.connect(self.update_plot)
+        form.addRow("Mode", self.efficiency_combo)
 
         return group
 
@@ -178,6 +199,14 @@ class TransductionGui(QMainWindow):
 
     def values(self):
         return {name: spin_box.value() for name, spin_box in self.inputs.items()}
+
+    def selected_efficiency_function(self):
+        key = self.efficiency_combo.currentData()
+        return EFFICIENCY_FUNCTIONS.get(key, EFFICIENCY_FUNCTIONS["OtoM"])[1]
+
+    def selected_efficiency_label(self):
+        key = self.efficiency_combo.currentData()
+        return EFFICIENCY_FUNCTIONS.get(key, EFFICIENCY_FUNCTIONS["OtoM"])[0]
 
     def _path_with_extension(self, file_path, selected_filter, fallback_extension):
         path = Path(file_path)
@@ -220,6 +249,13 @@ class TransductionGui(QMainWindow):
                         "value": f"{spin_box.value():.12g}",
                     }
                 )
+            writer.writerow(
+                {
+                    "name": "efficiency_function",
+                    "label": "Efficiency Function",
+                    "value": self.efficiency_combo.currentData(),
+                }
+            )
 
     def import_parameters_csv(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -237,6 +273,16 @@ class TransductionGui(QMainWindow):
                 updated_count = 0
                 for row in reader:
                     name = (row.get("name") or row.get("parameter") or "").strip()
+                    if name == "efficiency_function":
+                        value_text = (row.get("value") or "").strip()
+                        index = self.efficiency_combo.findData(value_text)
+                        if index >= 0:
+                            self.efficiency_combo.blockSignals(True)
+                            self.efficiency_combo.setCurrentIndex(index)
+                            self.efficiency_combo.blockSignals(False)
+                            updated_count += 1
+                        continue
+
                     if name not in self.inputs:
                         continue
 
@@ -255,6 +301,8 @@ class TransductionGui(QMainWindow):
                 f"Imported {updated_count} parameters from {file_path}"
             )
         except Exception as exc:
+            if self.efficiency_combo is not None:
+                self.efficiency_combo.blockSignals(False)
             for spin_box in self.inputs.values():
                 spin_box.blockSignals(False)
             self.status_label.setText(f"Parameter import failed: {exc}")
@@ -344,7 +392,7 @@ class TransductionGui(QMainWindow):
     def _calculate_plot_data(self):
         params = self.calculate_params()
         omega = np.linspace(-10.0, 10.0, 1000)
-        eta = efficiency_func(omega, **params)
+        eta = self.selected_efficiency_function()(omega, **params)
         peak_index = int(np.nanargmax(eta))
         max_eff = eta[peak_index] * 100.0
         fwhm = self._calculate_fwhm(omega, eta, peak_index)
@@ -373,6 +421,7 @@ class TransductionGui(QMainWindow):
         ax.set_xlim(-10, 10)
         ax.set_xlabel("Photon Cavity Detuning [MHz]", fontsize=14)
         ax.set_ylabel("Conversion Efficiency", fontsize=14)
+        ax.set_title(self.selected_efficiency_label(), fontsize=14)
         ax.grid(True, alpha=0.3)
 
     def save_graph(self, show_stats):

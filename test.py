@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from helper_funcs import efficiency_func, efficiency_plotter
+from helper_funcs import efficiency_func_OtoM, efficiency_plotter
 from rabi_freq import rabi_frequency_Rb85_hfs, rabi_frequency_Rb85_fs
 
 # Units: m, W, MHz
