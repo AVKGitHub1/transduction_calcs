@@ -23,13 +23,18 @@ from PyQt6.QtWidgets import (
 )
 
 from helper_funcs import efficiency_func_OtoM, efficiency_func_MtoO, efficiency_func_2
-from rabi_freq import rabi_frequency_Rb85_fs
+import rabi_freq_HardCoded
 
 
 EFFICIENCY_FUNCTIONS = {
     "OtoM": ("Optical to Microwave", efficiency_func_OtoM),
     "MtoO": ("Microwave to Optical", efficiency_func_MtoO),
     "func_2": ("Efficiency Function 2", efficiency_func_2),
+}
+
+RABI_CALCULATORS = {
+    "arc": "ARC",
+    "hardcoded": "Hard-coded dipoles",
 }
 
 INPUT_LABELS = {
@@ -67,6 +72,7 @@ class TransductionGui(QMainWindow):
         self.setWindowTitle("Transduction GUI")
         self.inputs = {}
         self.efficiency_combo = None
+        self.rabi_combo = None
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
 
@@ -133,6 +139,7 @@ class TransductionGui(QMainWindow):
                 ],
             )
         )
+        layout.addWidget(self._make_rabi_group())
         layout.addWidget(self._make_efficiency_group())
         layout.addWidget(self._make_actions_group())
 
@@ -152,6 +159,18 @@ class TransductionGui(QMainWindow):
             spin_box.valueChanged.connect(self.update_plot)
             self.inputs[name] = spin_box
             form.addRow(INPUT_LABELS.get(name, name), spin_box)
+
+        return group
+
+    def _make_rabi_group(self):
+        group = QGroupBox("Rabi Calculation")
+        form = QFormLayout(group)
+
+        self.rabi_combo = QComboBox()
+        for key, label in RABI_CALCULATORS.items():
+            self.rabi_combo.addItem(label, key)
+        self.rabi_combo.currentIndexChanged.connect(self.update_plot)
+        form.addRow("Source", self.rabi_combo)
 
         return group
 
@@ -208,6 +227,15 @@ class TransductionGui(QMainWindow):
         key = self.efficiency_combo.currentData()
         return EFFICIENCY_FUNCTIONS.get(key, EFFICIENCY_FUNCTIONS["OtoM"])[0]
 
+    def selected_rabi_calculator(self):
+        key = self.rabi_combo.currentData()
+        if key == "hardcoded":
+            return rabi_freq_HardCoded.rabi_frequency_Rb85_fs
+
+        from rabi_freq import rabi_frequency_Rb85_fs
+
+        return rabi_frequency_Rb85_fs
+
     def _path_with_extension(self, file_path, selected_filter, fallback_extension):
         path = Path(file_path)
         if path.suffix:
@@ -256,6 +284,13 @@ class TransductionGui(QMainWindow):
                     "value": self.efficiency_combo.currentData(),
                 }
             )
+            writer.writerow(
+                {
+                    "name": "rabi_calculator",
+                    "label": "Rabi Calculation",
+                    "value": self.rabi_combo.currentData(),
+                }
+            )
 
     def import_parameters_csv(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -282,6 +317,15 @@ class TransductionGui(QMainWindow):
                             self.efficiency_combo.blockSignals(False)
                             updated_count += 1
                         continue
+                    if name == "rabi_calculator":
+                        value_text = (row.get("value") or "").strip()
+                        index = self.rabi_combo.findData(value_text)
+                        if index >= 0:
+                            self.rabi_combo.blockSignals(True)
+                            self.rabi_combo.setCurrentIndex(index)
+                            self.rabi_combo.blockSignals(False)
+                            updated_count += 1
+                        continue
 
                     if name not in self.inputs:
                         continue
@@ -303,6 +347,8 @@ class TransductionGui(QMainWindow):
         except Exception as exc:
             if self.efficiency_combo is not None:
                 self.efficiency_combo.blockSignals(False)
+            if self.rabi_combo is not None:
+                self.rabi_combo.blockSignals(False)
             for spin_box in self.inputs.values():
                 spin_box.blockSignals(False)
             self.status_label.setText(f"Parameter import failed: {exc}")
@@ -321,6 +367,7 @@ class TransductionGui(QMainWindow):
         excited_state = (5, 1, 1.5, 1.5)
         rydberg_r_state = (55, 0, 0.5)
         rydberg_f_state = (54, 1, 1.5)
+        rabi_frequency_Rb85_fs = self.selected_rabi_calculator()
 
         omega_blue = rabi_frequency_Rb85_fs(
             excited_state,
