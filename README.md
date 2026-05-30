@@ -1,8 +1,30 @@
 # Transduction Calculator
 
-Static web version of the transduction GUI. The website runs fully in the
-browser and uses the hard-coded Rabi dipole calculation from
-`rabi_freq_HardCoded.py`.
+Browser-deployable version of the transduction GUI. The web app runs as static
+HTML/CSS/JavaScript, so it can be published directly with GitHub Pages and does
+not need a Python server.
+
+The website mirrors the main GUI controls, plots conversion efficiency, supports
+CSV parameter import/export, and can download the plot as PNG.
+
+## Files
+
+- `index.html`: web app entry point
+- `styles.css`: web app layout and styling
+- `app.js`: browser-side calculations, plotting, CSV, and PNG export
+- `gui.py`: desktop PyQt GUI
+- `rabi_freq.py`: ARC-backed Rabi calculation
+- `rabi_freq_HardCoded.py`: Python hard-coded dipole calculation
+- `.github/workflows/deploy-pages.yml`: GitHub Pages deployment workflow
+
+## Local Use
+
+Open `index.html` directly in a browser. No build step is required.
+
+The static web app always uses the hard-coded dipole calculation. ARC is a
+Python dependency and is only available in the desktop GUI path.
+
+## Updating Dipoles
 
 For the deployed website, update the web dipoles in `app.js`:
 
@@ -13,10 +35,20 @@ const DIPOLES_EA0 = {
 };
 ```
 
+For the Python hard-coded path, update the matching values in
+`rabi_freq_HardCoded.py`:
+
+```python
+d_b = -6.93809e-03
+d_UV = 1.70762e-03
+```
+
+Both sets are in atomic units, `e a0`.
+
 ## GitHub Pages
 
-This repo includes a GitHub Actions workflow at
-`.github/workflows/deploy-pages.yml`.
+This repo includes a GitHub Actions workflow that publishes only the static web
+files: `index.html`, `styles.css`, and `app.js`.
 
 To publish:
 
