@@ -1,0 +1,18 @@
+name,label,value
+gopt,gopt (kHz),25
+gmm,gmm (kHz),91
+kappaOpt,kappaOpt (MHz),10
+kappaMM,kappaMM (MHz),10
+Delta_e,Delta_e (MHz),0
+Delta_r,Delta_r (MHz),0
+DeltaMM,DeltaMM (MHz),0
+Natoms,Natoms,500000
+AtomRadius,AtomRadius (um),250
+gammaOpt,gammaOpt (MHz),6
+gammaMM,gammaMM (kHz),100
+PowerUV,PowerUV (mW),250
+PowerBlue,PowerBlue (mW),300
+WaistUV,WaistUV (um),1200
+WaistBlue,WaistBlue (um),1000
+DeltaUV,DeltaUV (MHz),2
+FBlue,FBlue,200

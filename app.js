@@ -25,7 +25,6 @@ const FIELD_GROUPS = {
   ],
   "atom-fields": [
     ["Natoms", "Natoms", 5e5, 1.0, 1e10, 1e4],
-    ["AtomRadius", "AtomRadius (um)", 250.0, 0.001, 1e6, 10.0],
     ["gammaOpt", "gammaOpt (MHz)", 6.0, 1e-6, 1e4, 0.1],
     ["gammaMM", "gammaMM (kHz)", 100.0, 0.001, 1e7, 1.0],
   ],
@@ -104,11 +103,6 @@ function getValues() {
 
 function calculateParams() {
   const values = getValues();
-  const rabiSource = byId("rabi-source").value;
-  if (rabiSource === "arc") {
-    throw new Error("ARC calculation requires the Python desktop GUI. Select hard-coded dipoles for this static site.");
-  }
-
   const powerUvW = values.PowerUV * 1e-3;
   const powerBlueW = values.PowerBlue * 1e-3;
   const waistUvM = values.WaistUV * 1e-6;
@@ -354,7 +348,7 @@ function drawPlot(data, showStats = true, targetCanvas = byId("plot")) {
   }
   ctx.lineTo(xScale(data.omega[data.omega.length - 1]), yScale(0));
   ctx.closePath();
-  ctx.fillStyle = "rgba(15, 122, 117, 0.18)";
+  ctx.fillStyle = "rgba(31, 119, 180, 0.25)";
   ctx.fill();
 
   ctx.beginPath();
@@ -365,7 +359,7 @@ function drawPlot(data, showStats = true, targetCanvas = byId("plot")) {
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   });
-  ctx.strokeStyle = "#0f7a75";
+  ctx.strokeStyle = "#1f77b4";
   ctx.lineWidth = 2;
   ctx.stroke();
 
@@ -491,7 +485,6 @@ function exportCsv() {
     rows.push([name, FIELD_LABELS[name], Number(input.value).toPrecision(12)]);
   }
   rows.push(["efficiency_function", "Efficiency Function", byId("efficiency-function").value]);
-  rows.push(["rabi_calculator", "Rabi Calculation", byId("rabi-source").value]);
   const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
   downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), "transduction_parameters.csv");
 }
@@ -544,9 +537,6 @@ function importCsvFile(file) {
         if (name === "efficiency_function") {
           byId("efficiency-function").value = value;
           updated += 1;
-        } else if (name === "rabi_calculator") {
-          byId("rabi-source").value = value;
-          updated += 1;
         } else if (state.fields[name] && value !== "") {
           state.fields[name].value = String(Number(value));
           updated += 1;
@@ -592,7 +582,6 @@ async function saveAll() {
 
 function bindEvents() {
   byId("efficiency-function").addEventListener("change", updatePlot);
-  byId("rabi-source").addEventListener("change", updatePlot);
   byId("export-csv").addEventListener("click", exportCsv);
   byId("import-csv").addEventListener("click", () => byId("csv-file").click());
   byId("csv-file").addEventListener("change", (event) => {
