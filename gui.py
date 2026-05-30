@@ -130,12 +130,12 @@ class TransductionGui(QMainWindow):
             self._make_group(
                 "Beam Parameters",
                 [
-                    ("PowerUV", 200.0, 0.001, 1e6, 10.0),
-                    ("PowerBlue", 200.0, 0.001, 1e6, 10.0),
+                    ("PowerUV", 250.0, 0.001, 1e6, 10.0),
+                    ("PowerBlue", 300.0, 0.001, 1e6, 10.0),
                     ("WaistUV", 1200.0, 0.001, 1e6, 10.0),
-                    ("WaistBlue", 1200.0, 0.001, 1e6, 10.0),
-                    ("DeltaUV", 5.0, 1e-6, 1e4, 0.1),
-                    ("FBlue", 100.0, 1e-6, 1e6, 1.0),
+                    ("WaistBlue", 1000.0, 0.001, 1e6, 10.0),
+                    ("DeltaUV", 2.0, 1e-6, 1e4, 0.1),
+                    ("FBlue", 200.0, 1e-6, 1e6, 1.0),
                 ],
             )
         )

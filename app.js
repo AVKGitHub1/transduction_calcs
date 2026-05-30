@@ -29,12 +29,12 @@ const FIELD_GROUPS = {
     ["gammaMM", "gammaMM (kHz)", 100.0, 0.001, 1e7, 1.0],
   ],
   "beam-fields": [
-    ["PowerUV", "PowerUV (mW)", 200.0, 0.001, 1e6, 10.0],
-    ["PowerBlue", "PowerBlue (mW)", 200.0, 0.001, 1e6, 10.0],
+    ["PowerUV", "PowerUV (mW)", 250.0, 0.001, 1e6, 10.0],
+    ["PowerBlue", "PowerBlue (mW)", 300.0, 0.001, 1e6, 10.0],
     ["WaistUV", "WaistUV (um)", 1200.0, 0.001, 1e6, 10.0],
-    ["WaistBlue", "WaistBlue (um)", 1200.0, 0.001, 1e6, 10.0],
-    ["DeltaUV", "DeltaUV (MHz)", 5.0, 1e-6, 1e4, 0.1],
-    ["FBlue", "FBlue", 100.0, 1e-6, 1e6, 1.0],
+    ["WaistBlue", "WaistBlue (um)", 1000.0, 0.001, 1e6, 10.0],
+    ["DeltaUV", "DeltaUV (MHz)", 2.0, 1e-6, 1e4, 0.1],
+    ["FBlue", "FBlue", 200.0, 1e-6, 1e6, 1.0],
   ],
 };
 
@@ -45,9 +45,9 @@ const FIELD_LABELS = Object.fromEntries(
 );
 
 const EFFICIENCY_LABELS = {
-  OtoM: "Optical to Microwave",
-  MtoO: "Microwave to Optical",
-  func_2: "Efficiency Function 2",
+  OtoM: "Efficiency Function Optical to Microwave",
+  MtoO: "Efficiency Function Microwave to Optical",
+  func_2: "Efficiency Function from Kumar2023",
 };
 
 const state = {

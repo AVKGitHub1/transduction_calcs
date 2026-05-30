@@ -82,6 +82,36 @@ h1 {
   font-weight: 700;
 }
 
+.title-row {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.title-row p {
+  grid-column: 1 / -1;
+}
+
+.physics-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--panel-soft);
+  color: var(--accent-dark);
+  padding: 6px 10px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.physics-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 h2 {
   margin-bottom: 10px;
   font-size: 0.82rem;
@@ -238,6 +268,10 @@ canvas {
 @media (max-width: 560px) {
   .app-shell {
     padding: 10px;
+  }
+
+  .title-row {
+    grid-template-columns: 1fr;
   }
 
   .field-row,

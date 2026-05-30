@@ -1,5 +1,7 @@
 # Transduction Calculator
 
+The physics can be seen at [Notion Derivation Page](https://www.notion.so/Efficiency-Function-Derivation-36eee2c01b6180728fb7e5bccfe16d82)
+
 Browser-deployable version of the transduction GUI. The web app runs as static
 HTML/CSS/JavaScript, so it can be published directly with GitHub Pages and does
 not need a Python server.
