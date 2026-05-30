@@ -1,0 +1,253 @@
+:root {
+  color-scheme: light;
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --panel-soft: #f8fafc;
+  --line: #d7dde5;
+  --line-strong: #aeb8c5;
+  --text: #18212f;
+  --muted: #647083;
+  --accent: #0f7a75;
+  --accent-dark: #095f5b;
+  --danger: #a43f3f;
+  --shadow: 0 10px 30px rgba(20, 32, 46, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+  gap: 16px;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.controls,
+.plot-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.controls {
+  align-self: start;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 12px;
+}
+
+.control-group {
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+}
+
+.control-group:first-child {
+  padding-top: 0;
+}
+
+.control-group:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field-grid,
+.button-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.field-row,
+.select-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 150px);
+  gap: 10px;
+  align-items: center;
+}
+
+.field-row label,
+.select-row span {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  padding: 6px 8px;
+}
+
+input:focus,
+select:focus,
+button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent), white 25%);
+  outline-offset: 1px;
+}
+
+button {
+  min-height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--panel-soft);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  padding: 7px 10px;
+}
+
+button:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.plot-panel {
+  display: grid;
+  grid-template-rows: auto minmax(320px, 1fr) auto;
+  min-height: calc(100vh - 32px);
+  overflow: hidden;
+}
+
+.plot-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+}
+
+#plot-subtitle {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(96px, auto));
+  gap: 8px;
+}
+
+.metrics div {
+  min-width: 96px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  padding: 8px 10px;
+}
+
+.metrics span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.metrics strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.94rem;
+}
+
+.canvas-wrap {
+  min-height: 320px;
+  padding: 14px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+#status {
+  min-height: 34px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+#status.error {
+  color: var(--danger);
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    max-height: none;
+  }
+
+  .plot-panel {
+    min-height: 560px;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    padding: 10px;
+  }
+
+  .field-row,
+  .select-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .metrics {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
