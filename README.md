@@ -43,9 +43,25 @@ For the Python hard-coded path, update the matching values in
 ```python
 d_b = -6.93809e-03
 d_UV = 1.70762e-03
+d_opt = 2.98915
 ```
 
-Both sets are in atomic units, `e a0`.
+All dipoles are in atomic units, `e a0`.
+
+## Single-Atom Cavity Coupling
+
+Choose **Calculate from mode volume** under **Optical Single-Atom g**, then enter
+the optical mode volume in `mm^3`. The calculator uses the hard-coded
+`5S1/2, mj=1/2 -> 5P3/2, mj=3/2` dipole (`2.98915 e a0`) at `780.24 nm` and
+reports `g / 2 pi` in kHz. The manual `gopt` input remains available.
+
+The same calculation can be called directly from Python:
+
+```python
+from rabi_freq_HardCoded import single_atom_g_optical
+
+g_khz = single_atom_g_optical(0.083e-9)["g_kHz"]
+```
 
 ## GitHub Pages
 

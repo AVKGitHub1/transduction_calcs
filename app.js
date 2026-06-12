@@ -3,6 +3,7 @@
 const DIPOLES_EA0 = {
   blue: -6.93809e-3,
   uv: 1.70762e-3,
+  optical: 2.98915,
 };
 
 const CONSTANTS = {
@@ -11,11 +12,13 @@ const CONSTANTS = {
   hbar: 1.054571817e-34,
   e: 1.602176634e-19,
   a0: 5.29177210903e-11,
+  opticalWavelengthM: 780.24e-9,
 };
 
 const FIELD_GROUPS = {
   "cavity-fields": [
     ["gopt", "gopt (kHz)", 25.0, 0.001, 1e6, 1.0],
+    ["ModeVolumeOpt", "Optical mode volume (mm^3)", 0.083, 1e-9, 1e9, 0.001],
     ["gmm", "gmm (kHz)", 91.0, 0.001, 1e6, 1.0],
     ["kappaOpt", "kappaOpt (MHz)", 10.0, 1e-6, 1e4, 0.1],
     ["kappaMM", "kappaMM (MHz)", 10.0, 1e-6, 1e4, 0.1],
@@ -93,6 +96,26 @@ function rabiFrequencyFromDipole(dipoleEa0, powerW, waistM) {
   };
 }
 
+function singleAtomCouplingFromModeVolume(dipoleEa0, wavelengthM, modeVolumeM3) {
+  if (!(wavelengthM > 0)) throw new Error("Optical wavelength must be positive.");
+  if (!(modeVolumeM3 > 0)) throw new Error("Optical mode volume must be positive.");
+
+  const dipoleSI = Math.abs(dipoleEa0) * CONSTANTS.e * CONSTANTS.a0;
+  const omegaRadS = (2 * Math.PI * CONSTANTS.c) / wavelengthM;
+  const vacuumFieldVM = Math.sqrt(
+    (CONSTANTS.hbar * omegaRadS) / (2 * CONSTANTS.epsilon0 * modeVolumeM3),
+  );
+  const gRadS = (dipoleSI * vacuumFieldVM) / CONSTANTS.hbar;
+  const gHz = gRadS / (2 * Math.PI);
+  return {
+    vacuum_field_V_m: vacuumFieldVM,
+    g_rad_s: gRadS,
+    g_Hz: gHz,
+    g_kHz: gHz / 1e3,
+    g_MHz: gHz / 1e6,
+  };
+}
+
 function getValues() {
   const values = {};
   for (const [name, input] of Object.entries(state.fields)) {
@@ -103,6 +126,13 @@ function getValues() {
 
 function calculateParams() {
   const values = getValues();
+  const goptKHz = byId("gopt-source").value === "mode_volume"
+    ? singleAtomCouplingFromModeVolume(
+      DIPOLES_EA0.optical,
+      CONSTANTS.opticalWavelengthM,
+      values.ModeVolumeOpt * 1e-9,
+    ).g_kHz
+    : values.gopt;
   const powerUvW = values.PowerUV * 1e-3;
   const powerBlueW = values.PowerBlue * 1e-3;
   const waistUvM = values.WaistUV * 1e-6;
@@ -119,7 +149,7 @@ function calculateParams() {
   const nOpt = values.Natoms * power(Math.cos(thetaUv), 2);
 
   return {
-    Gopt: values.gopt * 1e-3 * Math.sqrt(nOpt),
+    Gopt: goptKHz * 1e-3 * Math.sqrt(nOpt),
     Gmm: values.gmm * 1e-3 * Math.sqrt(nMm),
     kappaOpt: values.kappaOpt,
     GammaOpt: values.gammaOpt,
@@ -133,6 +163,7 @@ function calculateParams() {
     epsilon: 1.0,
     omegaBlue,
     omegaUv,
+    goptKHz,
   };
 }
 
@@ -429,6 +460,7 @@ function updatePlot() {
     byId("bandwidth").textContent = formatMetric(data.fwhm, " MHz");
     byId("omega-b").textContent = formatMetric(data.params.OmegaB, " MHz");
     byId("omega-uv").textContent = formatMetric(data.params.omegaUv, " MHz");
+    byId("single-atom-g").textContent = formatMetric(data.params.goptKHz, " kHz");
     setStatus("");
   } catch (error) {
     setStatus(error.message, true);
@@ -485,6 +517,7 @@ function exportCsv() {
     rows.push([name, FIELD_LABELS[name], Number(input.value).toPrecision(12)]);
   }
   rows.push(["efficiency_function", "Efficiency Function", byId("efficiency-function").value]);
+  rows.push(["gopt_source", "Optical g Calculation", byId("gopt-source").value]);
   const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
   downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), "transduction_parameters.csv");
 }
@@ -537,6 +570,9 @@ function importCsvFile(file) {
         if (name === "efficiency_function") {
           byId("efficiency-function").value = value;
           updated += 1;
+        } else if (name === "gopt_source") {
+          byId("gopt-source").value = value;
+          updated += 1;
         } else if (state.fields[name] && value !== "") {
           state.fields[name].value = String(Number(value));
           updated += 1;
@@ -581,6 +617,7 @@ async function saveAll() {
 }
 
 function bindEvents() {
+  byId("gopt-source").addEventListener("change", updatePlot);
   byId("efficiency-function").addEventListener("change", updatePlot);
   byId("export-csv").addEventListener("click", exportCsv);
   byId("import-csv").addEventListener("click", () => byId("csv-file").click());

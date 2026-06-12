@@ -39,6 +39,7 @@ RABI_CALCULATORS = {
 
 INPUT_LABELS = {
     "gopt": "gopt (kHz)",
+    "ModeVolumeOpt": "Optical mode volume (mm^3)",
     "gmm": "gmm (kHz)",
     "kappaOpt": "kappaOpt (MHz)",
     "kappaMM": "kappaMM (MHz)",
@@ -73,6 +74,8 @@ class TransductionGui(QMainWindow):
         self.inputs = {}
         self.efficiency_combo = None
         self.rabi_combo = None
+        self.gopt_source_combo = None
+        self.gopt_result_label = QLabel()
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
 
@@ -106,6 +109,7 @@ class TransductionGui(QMainWindow):
                 "Cavity Parameters",
                 [
                     ("gopt", 25.0, 0.001, 1e6, 1.0),
+                    ("ModeVolumeOpt", 0.083, 1e-9, 1e9, 0.001),
                     ("gmm", 91.0, 0.001, 1e6, 1.0),
                     ("kappaOpt", 10.0, 1e-6, 1e4, 0.1),
                     ("kappaMM", 10.0, 1e-6, 1e4, 0.1),
@@ -115,6 +119,7 @@ class TransductionGui(QMainWindow):
                 ],
             )
         )
+        layout.addWidget(self._make_optical_coupling_group())
         layout.addWidget(
             self._make_group(
                 "Atom Parameters",
@@ -159,6 +164,19 @@ class TransductionGui(QMainWindow):
             spin_box.valueChanged.connect(self.update_plot)
             self.inputs[name] = spin_box
             form.addRow(INPUT_LABELS.get(name, name), spin_box)
+
+        return group
+
+    def _make_optical_coupling_group(self):
+        group = QGroupBox("Optical Single-Atom g")
+        form = QFormLayout(group)
+
+        self.gopt_source_combo = QComboBox()
+        self.gopt_source_combo.addItem("Manual gopt", "manual")
+        self.gopt_source_combo.addItem("Calculate from mode volume", "mode_volume")
+        self.gopt_source_combo.currentIndexChanged.connect(self.update_plot)
+        form.addRow("Source", self.gopt_source_combo)
+        form.addRow("g / 2pi", self.gopt_result_label)
 
         return group
 
@@ -279,6 +297,13 @@ class TransductionGui(QMainWindow):
                 )
             writer.writerow(
                 {
+                    "name": "gopt_source",
+                    "label": "Optical g Calculation",
+                    "value": self.gopt_source_combo.currentData(),
+                }
+            )
+            writer.writerow(
+                {
                     "name": "efficiency_function",
                     "label": "Efficiency Function",
                     "value": self.efficiency_combo.currentData(),
@@ -308,6 +333,15 @@ class TransductionGui(QMainWindow):
                 updated_count = 0
                 for row in reader:
                     name = (row.get("name") or row.get("parameter") or "").strip()
+                    if name == "gopt_source":
+                        value_text = (row.get("value") or "").strip()
+                        index = self.gopt_source_combo.findData(value_text)
+                        if index >= 0:
+                            self.gopt_source_combo.blockSignals(True)
+                            self.gopt_source_combo.setCurrentIndex(index)
+                            self.gopt_source_combo.blockSignals(False)
+                            updated_count += 1
+                        continue
                     if name == "efficiency_function":
                         value_text = (row.get("value") or "").strip()
                         index = self.efficiency_combo.findData(value_text)
@@ -349,13 +383,23 @@ class TransductionGui(QMainWindow):
                 self.efficiency_combo.blockSignals(False)
             if self.rabi_combo is not None:
                 self.rabi_combo.blockSignals(False)
+            if self.gopt_source_combo is not None:
+                self.gopt_source_combo.blockSignals(False)
             for spin_box in self.inputs.values():
                 spin_box.blockSignals(False)
             self.status_label.setText(f"Parameter import failed: {exc}")
 
+    def optical_single_atom_g_khz(self, values):
+        if self.gopt_source_combo.currentData() == "mode_volume":
+            mode_volume_m3 = values["ModeVolumeOpt"] * 1e-9
+            return rabi_freq_HardCoded.single_atom_g_optical(mode_volume_m3)[
+                "g_kHz"
+            ]
+        return values["gopt"]
+
     def calculate_params(self):
         values = self.values()
-        gopt_mhz = values["gopt"] * 1e-3
+        gopt_mhz = self.optical_single_atom_g_khz(values) * 1e-3
         gmm_mhz = values["gmm"] * 1e-3
         gamma_mm_mhz = values["gammaMM"] * 1e-3
         power_uv_w = values["PowerUV"] * 1e-3
@@ -540,6 +584,8 @@ class TransductionGui(QMainWindow):
 
     def update_plot(self):
         try:
+            gopt_khz = self.optical_single_atom_g_khz(self.values())
+            self.gopt_result_label.setText(f"{gopt_khz:.6g} kHz")
             omega, eta, max_eff, fwhm = self._calculate_plot_data()
             self._draw_efficiency_plot(self.ax, omega, eta, max_eff, fwhm, True)
             self.figure.tight_layout()

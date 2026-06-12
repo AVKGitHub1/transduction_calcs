@@ -5,8 +5,12 @@ from scipy.constants import epsilon_0, c, hbar, elementary_charge, physical_cons
 # Fill these with the transition dipole moments in atomic units (e a0).
 # Blue: 5P3/2, mj=3/2 -> 55S1/2 with q=-1
 # UV:   5S1/2, mj=1/2 -> 54P3/2 with q=+1
+# Opt:  5S1/2, mj=1/2 -> 5P3/2, mj=3/2 with q=+1
 d_b = -6.93809e-03
 d_UV = 1.70762e-03
+d_opt = 2.98915
+
+OPTICAL_CAVITY_WAVELENGTH_M = 780.24e-9
 
 
 a0 = physical_constants["Bohr radius"][0]
@@ -41,6 +45,53 @@ def _dipole_si(dipole_ea0, dipole_name):
             "rabi_freq_HardCoded.py in units of e a0."
         )
     return abs(dipole_ea0) * e * a0
+
+
+def single_atom_coupling_from_mode_volume(
+    dipole_ea0,
+    wavelength_m,
+    mode_volume_m3,
+    dipole_name="dipole_ea0",
+):
+    """
+    Calculate the single-atom vacuum coupling g for a cavity mode.
+
+    The mode volume must be in m^3. The returned ``g_rad_s`` is angular
+    frequency, while ``g_Hz``, ``g_kHz``, and ``g_MHz`` are g / (2 pi).
+    """
+    if wavelength_m <= 0:
+        raise ValueError("wavelength_m must be greater than zero.")
+    if mode_volume_m3 <= 0:
+        raise ValueError("mode_volume_m3 must be greater than zero.")
+
+    d_SI = _dipole_si(dipole_ea0, dipole_name)
+    omega_rad_s = 2 * np.pi * c / wavelength_m
+    vacuum_field_V_m = np.sqrt(
+        hbar * omega_rad_s / (2 * epsilon_0 * mode_volume_m3)
+    )
+    g_rad_s = d_SI * vacuum_field_V_m / hbar
+    g_Hz = g_rad_s / (2 * np.pi)
+
+    return {
+        "dipole_ea0": dipole_ea0,
+        "wavelength_m": wavelength_m,
+        "mode_volume_m3": mode_volume_m3,
+        "vacuum_field_V_m": vacuum_field_V_m,
+        "g_rad_s": g_rad_s,
+        "g_Hz": g_Hz,
+        "g_kHz": g_Hz / 1e3,
+        "g_MHz": g_Hz / 1e6,
+    }
+
+
+def single_atom_g_optical(mode_volume_m3):
+    """Single-atom g for the hard-coded 780.24 nm optical transition."""
+    return single_atom_coupling_from_mode_volume(
+        d_opt,
+        OPTICAL_CAVITY_WAVELENGTH_M,
+        mode_volume_m3,
+        "d_opt",
+    )
 
 
 def _rabi_frequency_from_dipole(dipole_ea0, dipole_name, power_W, waist_m):

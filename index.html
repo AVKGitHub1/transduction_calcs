@@ -15,6 +15,17 @@
         </section>
 
         <section class="control-group">
+          <h2>Optical Single-Atom g</h2>
+          <label class="select-row">
+            <span>Source</span>
+            <select id="gopt-source">
+              <option value="manual" selected>Manual gopt</option>
+              <option value="mode_volume">Calculate from mode volume</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="control-group">
           <h2>Atom Parameters</h2>
           <div class="field-grid" id="atom-fields"></div>
         </section>
@@ -79,6 +90,10 @@
             <div>
               <span>OmegaUV</span>
               <strong id="omega-uv">-</strong>
+            </div>
+            <div>
+              <span>Single-Atom g / 2pi</span>
+              <strong id="single-atom-g">-</strong>
             </div>
           </div>
         </div>
