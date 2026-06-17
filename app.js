@@ -164,6 +164,7 @@ function calculateParams() {
     omegaBlue,
     omegaUv,
     goptKHz,
+    nMm,
   };
 }
 
@@ -311,6 +312,11 @@ function calculatePlotData() {
 function formatMetric(value, suffix = "") {
   if (!Number.isFinite(value)) return "-";
   return `${value.toFixed(3)}${suffix}`;
+}
+
+function formatCountMetric(value) {
+  if (!Number.isFinite(value)) return "-";
+  return value.toPrecision(6);
 }
 
 function drawPlot(data, showStats = true, targetCanvas = byId("plot")) {
@@ -461,6 +467,7 @@ function updatePlot() {
     byId("omega-b").textContent = formatMetric(data.params.OmegaB, " MHz");
     byId("omega-uv").textContent = formatMetric(data.params.omegaUv, " MHz");
     byId("single-atom-g").textContent = formatMetric(data.params.goptKHz, " kHz");
+    byId("n-mm").textContent = formatCountMetric(data.params.nMm);
     setStatus("");
   } catch (error) {
     setStatus(error.message, true);

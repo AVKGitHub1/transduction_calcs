@@ -76,6 +76,7 @@ class TransductionGui(QMainWindow):
         self.rabi_combo = None
         self.gopt_source_combo = None
         self.gopt_result_label = QLabel()
+        self.nmm_result_label = QLabel()
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
 
@@ -129,6 +130,7 @@ class TransductionGui(QMainWindow):
                     ("gammaOpt", 6.0, 1e-6, 1e4, 0.1),
                     ("gammaMM", 100.0, 0.001, 1e7, 1.0),
                 ],
+                extra_rows=[("N_mm", self.nmm_result_label)],
             )
         )
         layout.addWidget(
@@ -150,7 +152,7 @@ class TransductionGui(QMainWindow):
 
         return panel
 
-    def _make_group(self, title, fields):
+    def _make_group(self, title, fields, extra_rows=None):
         group = QGroupBox(title)
         form = QFormLayout(group)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
@@ -164,6 +166,9 @@ class TransductionGui(QMainWindow):
             spin_box.valueChanged.connect(self.update_plot)
             self.inputs[name] = spin_box
             form.addRow(INPUT_LABELS.get(name, name), spin_box)
+
+        for label, widget in extra_rows or []:
+            form.addRow(label, widget)
 
         return group
 
@@ -397,7 +402,7 @@ class TransductionGui(QMainWindow):
             ]
         return values["gopt"]
 
-    def calculate_params(self):
+    def calculate_quantities(self):
         values = self.values()
         gopt_mhz = self.optical_single_atom_g_khz(values) * 1e-3
         gmm_mhz = values["gmm"] * 1e-3
@@ -432,7 +437,7 @@ class TransductionGui(QMainWindow):
         n_mm = values["Natoms"] * np.sin(theta_uv) ** 2
         n_opt = values["Natoms"] * np.cos(theta_uv) ** 2
 
-        return {
+        params = {
             "Gopt": gopt_mhz * np.sqrt(n_opt),
             "Gmm": gmm_mhz * np.sqrt(n_mm),
             "kappaOpt": values["kappaOpt"],
@@ -446,6 +451,14 @@ class TransductionGui(QMainWindow):
             "Ein": 1.0,
             "epsilon": 1.0,
         }
+        derived = {
+            "gopt_khz": gopt_mhz * 1e3,
+            "N_mm": n_mm,
+        }
+        return params, derived
+
+    def calculate_params(self):
+        return self.calculate_quantities()[0]
 
     def _calculate_fwhm(self, omega, eta, peak_index):
         half_max = eta[peak_index] / 2.0
@@ -481,13 +494,13 @@ class TransductionGui(QMainWindow):
         return right_crossing - left_crossing
 
     def _calculate_plot_data(self):
-        params = self.calculate_params()
+        params, derived = self.calculate_quantities()
         omega = np.linspace(-10.0, 10.0, 1000)
         eta = self.selected_efficiency_function()(omega, **params)
         peak_index = int(np.nanargmax(eta))
         max_eff = eta[peak_index] * 100.0
         fwhm = self._calculate_fwhm(omega, eta, peak_index)
-        return omega, eta, max_eff, fwhm
+        return omega, eta, max_eff, fwhm, derived
 
     def _draw_efficiency_plot(self, ax, omega, eta, max_eff, fwhm, show_stats):
         ax.clear()
@@ -537,7 +550,7 @@ class TransductionGui(QMainWindow):
         if plot_data is None:
             plot_data = self._calculate_plot_data()
 
-        omega, eta, max_eff, fwhm = plot_data
+        omega, eta, max_eff, fwhm = plot_data[:4]
         figure = Figure(figsize=(7, 4.5))
         ax = figure.add_subplot(111)
         self._draw_efficiency_plot(ax, omega, eta, max_eff, fwhm, show_stats)
@@ -584,9 +597,9 @@ class TransductionGui(QMainWindow):
 
     def update_plot(self):
         try:
-            gopt_khz = self.optical_single_atom_g_khz(self.values())
-            self.gopt_result_label.setText(f"{gopt_khz:.6g} kHz")
-            omega, eta, max_eff, fwhm = self._calculate_plot_data()
+            omega, eta, max_eff, fwhm, derived = self._calculate_plot_data()
+            self.gopt_result_label.setText(f"{derived['gopt_khz']:.6g} kHz")
+            self.nmm_result_label.setText(f"{derived['N_mm']:.6g}")
             self._draw_efficiency_plot(self.ax, omega, eta, max_eff, fwhm, True)
             self.figure.tight_layout()
             self.status_label.setText("")
