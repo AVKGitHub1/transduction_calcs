@@ -62,6 +62,7 @@ const EFFICIENCY_LABELS = {
 
 const state = {
   fields: {},
+  goptSource: "manual",
   lastPlotData: null,
 };
 
@@ -148,7 +149,7 @@ function getValues() {
 
 function calculateParams() {
   const values = getValues();
-  const goptKHz = byId("gopt-source").value === "mode_volume"
+  const goptKHz = state.goptSource === "mode_volume"
     ? singleAtomCouplingFromModeVolume(
       DIPOLES_EA0.optical,
       CONSTANTS.opticalWavelengthM,
@@ -488,6 +489,9 @@ function updatePlot() {
     state.lastPlotData = data;
     drawPlot(data, true);
     byId("plot-subtitle").textContent = EFFICIENCY_LABELS[byId("efficiency-function").value];
+    byId("gopt-source-status").textContent = state.goptSource === "mode_volume"
+      ? "g_opt calculated from mode volume"
+      : "g_opt calculated manually";
     byId("max-efficiency").textContent = formatMetric(data.maxEff, "%");
     byId("bandwidth").textContent = formatMetric(data.fwhm, " MHz");
     byId("omega-b").textContent = formatMetric(data.params.OmegaB, " MHz");
@@ -521,7 +525,11 @@ function buildFields() {
       input.max = String(max);
       input.step = String(step);
       input.value = String(value);
-      input.addEventListener("input", updatePlot);
+      input.addEventListener("input", () => {
+        if (name === "gopt") state.goptSource = "manual";
+        if (name === "ModeVolumeOpt") state.goptSource = "mode_volume";
+        updatePlot();
+      });
 
       state.fields[name] = input;
       row.append(labelEl, input);
@@ -552,7 +560,7 @@ function exportCsv() {
     rows.push([name, FIELD_LABELS[name], Number(input.value).toPrecision(12)]);
   }
   rows.push(["efficiency_function", "Efficiency Function", byId("efficiency-function").value]);
-  rows.push(["gopt_source", "Optical g Calculation", byId("gopt-source").value]);
+  rows.push(["gopt_source", "Optical g Calculation", state.goptSource]);
   const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
   downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), "transduction_parameters.csv");
 }
@@ -600,6 +608,7 @@ function importCsvFile(file) {
 
       let updated = 0;
       const fieldValues = {};
+      let importedGoptSource = null;
       let legacyAtomNumber = null;
       let legacyWaistBlue = null;
 
@@ -610,8 +619,7 @@ function importCsvFile(file) {
           byId("efficiency-function").value = value;
           updated += 1;
         } else if (name === "gopt_source") {
-          byId("gopt-source").value = value;
-          updated += 1;
+          importedGoptSource = value;
         } else if (name === "Natoms" && value !== "") {
           legacyAtomNumber = Number(value);
         } else if (name === "WaistBlue" && value !== "") {
@@ -634,6 +642,11 @@ function importCsvFile(file) {
 
       for (const [name, value] of Object.entries(fieldValues)) {
         state.fields[name].value = String(value);
+        updated += 1;
+      }
+
+      if (importedGoptSource === "manual" || importedGoptSource === "mode_volume") {
+        state.goptSource = importedGoptSource;
         updated += 1;
       }
 
@@ -676,7 +689,6 @@ async function saveAll() {
 }
 
 function bindEvents() {
-  byId("gopt-source").addEventListener("change", updatePlot);
   byId("efficiency-function").addEventListener("change", updatePlot);
   byId("export-csv").addEventListener("click", exportCsv);
   byId("import-csv").addEventListener("click", () => byId("csv-file").click());

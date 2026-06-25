@@ -90,7 +90,8 @@ class TransductionGui(QMainWindow):
         self.inputs = {}
         self.efficiency_combo = None
         self.rabi_combo = None
-        self.gopt_source_combo = None
+        self.gopt_source = "manual"
+        self.gopt_source_label = QLabel()
         self.gopt_result_label = QLabel()
         self.atom_number_result_label = QLabel()
         self.nmm_result_label = QLabel()
@@ -192,7 +193,16 @@ class TransductionGui(QMainWindow):
             spin_box.setRange(minimum, maximum)
             spin_box.setSingleStep(step)
             spin_box.setValue(default)
-            spin_box.valueChanged.connect(self.update_plot)
+            if name == "gopt":
+                spin_box.valueChanged.connect(
+                    lambda _value: self.set_gopt_source("manual")
+                )
+            elif name == "ModeVolumeOpt":
+                spin_box.valueChanged.connect(
+                    lambda _value: self.set_gopt_source("mode_volume")
+                )
+            else:
+                spin_box.valueChanged.connect(self.update_plot)
             self.inputs[name] = spin_box
             form.addRow(INPUT_LABELS.get(name, name), spin_box)
 
@@ -205,14 +215,14 @@ class TransductionGui(QMainWindow):
         group = QGroupBox("Optical Single-Atom g")
         form = QFormLayout(group)
 
-        self.gopt_source_combo = QComboBox()
-        self.gopt_source_combo.addItem("Manual gopt", "manual")
-        self.gopt_source_combo.addItem("Calculate from mode volume", "mode_volume")
-        self.gopt_source_combo.currentIndexChanged.connect(self.update_plot)
-        form.addRow("Source", self.gopt_source_combo)
+        form.addRow(self.gopt_source_label)
         form.addRow("g / 2pi", self.gopt_result_label)
 
         return group
+
+    def set_gopt_source(self, source):
+        self.gopt_source = source
+        self.update_plot()
 
     def _make_rabi_group(self):
         group = QGroupBox("Rabi Calculation")
@@ -333,7 +343,7 @@ class TransductionGui(QMainWindow):
                 {
                     "name": "gopt_source",
                     "label": "Optical g Calculation",
-                    "value": self.gopt_source_combo.currentData(),
+                    "value": self.gopt_source,
                 }
             )
             writer.writerow(
@@ -367,6 +377,7 @@ class TransductionGui(QMainWindow):
                 updated_count = 0
                 parameter_values = {}
                 combo_values = {}
+                imported_gopt_source = None
                 legacy_atom_number = None
                 legacy_waist_blue = None
 
@@ -377,7 +388,7 @@ class TransductionGui(QMainWindow):
                         continue
 
                     if name == "gopt_source":
-                        combo_values[name] = value_text
+                        imported_gopt_source = value_text
                         continue
                     if name == "efficiency_function":
                         combo_values[name] = value_text
@@ -419,9 +430,7 @@ class TransductionGui(QMainWindow):
                     )
 
                 for name, value_text in combo_values.items():
-                    if name == "gopt_source":
-                        combo = self.gopt_source_combo
-                    elif name == "efficiency_function":
+                    if name == "efficiency_function":
                         combo = self.efficiency_combo
                     else:
                         combo = self.rabi_combo
@@ -440,6 +449,10 @@ class TransductionGui(QMainWindow):
                     spin_box.blockSignals(False)
                     updated_count += 1
 
+                if imported_gopt_source in {"manual", "mode_volume"}:
+                    self.gopt_source = imported_gopt_source
+                    updated_count += 1
+
             self.update_plot()
             self.status_label.setText(
                 f"Imported {updated_count} parameters from {file_path}"
@@ -449,14 +462,12 @@ class TransductionGui(QMainWindow):
                 self.efficiency_combo.blockSignals(False)
             if self.rabi_combo is not None:
                 self.rabi_combo.blockSignals(False)
-            if self.gopt_source_combo is not None:
-                self.gopt_source_combo.blockSignals(False)
             for spin_box in self.inputs.values():
                 spin_box.blockSignals(False)
             self.status_label.setText(f"Parameter import failed: {exc}")
 
     def optical_single_atom_g_khz(self, values):
-        if self.gopt_source_combo.currentData() == "mode_volume":
+        if self.gopt_source == "mode_volume":
             mode_volume_m3 = values["ModeVolumeOpt"] * 1e-9
             return rabi_freq_HardCoded.single_atom_g_optical(mode_volume_m3)[
                 "g_kHz"
@@ -665,6 +676,10 @@ class TransductionGui(QMainWindow):
     def update_plot(self):
         try:
             omega, eta, max_eff, fwhm, derived = self._calculate_plot_data()
+            if self.gopt_source == "mode_volume":
+                self.gopt_source_label.setText("g_opt calculated from mode volume")
+            else:
+                self.gopt_source_label.setText("g_opt calculated manually")
             self.gopt_result_label.setText(f"{derived['gopt_khz']:.6g} kHz")
             self.atom_number_result_label.setText(
                 f"{derived['atom_number']:.6g}"
