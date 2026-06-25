@@ -15,6 +15,13 @@ const CONSTANTS = {
   opticalWavelengthM: 780.24e-9,
 };
 
+const BLUE_WAIST_RATIO = 0.78;
+const DEFAULT_ATOM_NUMBER = 5e5;
+const DEFAULT_CAVITY_WAIST_UM = 1000.0 / BLUE_WAIST_RATIO;
+const DEFAULT_ATOM_DENSITY_CM3 =
+  DEFAULT_ATOM_NUMBER
+  / ((4 / 3) * Math.PI * (DEFAULT_CAVITY_WAIST_UM * 1e-4) ** 3);
+
 const FIELD_GROUPS = {
   "cavity-fields": [
     ["gopt", "gopt (kHz)", 25.0, 0.001, 1e6, 1.0],
@@ -27,15 +34,15 @@ const FIELD_GROUPS = {
     ["DeltaMM", "DeltaMM (MHz)", 0.0, -1e4, 1e4, 0.1],
   ],
   "atom-fields": [
-    ["Natoms", "Natoms", 5e5, 1.0, 1e10, 1e4],
+    ["AtomDensity", "Atom density (cm^-3)", DEFAULT_ATOM_DENSITY_CM3, 0.0, 1e16, 1e6],
     ["gammaOpt", "gammaOpt (MHz)", 6.0, 1e-6, 1e4, 0.1],
     ["gammaMM", "gammaMM (kHz)", 100.0, 0.001, 1e7, 1.0],
   ],
   "beam-fields": [
     ["PowerUV", "PowerUV (mW)", 250.0, 0.001, 1e6, 10.0],
     ["PowerBlue", "PowerBlue (mW)", 300.0, 0.001, 1e6, 10.0],
+    ["CavityWaist", "Cavity waist (um)", DEFAULT_CAVITY_WAIST_UM, 0.001, 1e6, 10.0],
     ["WaistUV", "WaistUV (um)", 1200.0, 0.001, 1e6, 10.0],
-    ["WaistBlue", "WaistBlue (um)", 1000.0, 0.001, 1e6, 10.0],
     ["DeltaUV", "DeltaUV (MHz)", 2.0, 1e-6, 1e4, 0.1],
     ["FBlue", "FBlue", 200.0, 1e-6, 1e6, 1.0],
   ],
@@ -64,6 +71,10 @@ function byId(id) {
 
 function power(base, exponent) {
   return Math.pow(base, exponent);
+}
+
+function hasOwn(object, key) {
+  return Object.prototype.hasOwnProperty.call(object, key);
 }
 
 function linspace(start, end, count) {
@@ -116,6 +127,17 @@ function singleAtomCouplingFromModeVolume(dipoleEa0, wavelengthM, modeVolumeM3) 
   };
 }
 
+function atomNumberFromDensity(densityCm3, cavityWaistUm) {
+  const radiusCm = cavityWaistUm * 1e-4;
+  return densityCm3 * (4 / 3) * Math.PI * power(radiusCm, 3);
+}
+
+function atomDensityFromNumber(atomNumber, cavityWaistUm) {
+  const radiusCm = cavityWaistUm * 1e-4;
+  const volumeCm3 = (4 / 3) * Math.PI * power(radiusCm, 3);
+  return volumeCm3 > 0 ? atomNumber / volumeCm3 : 0;
+}
+
 function getValues() {
   const values = {};
   for (const [name, input] of Object.entries(state.fields)) {
@@ -136,7 +158,9 @@ function calculateParams() {
   const powerUvW = values.PowerUV * 1e-3;
   const powerBlueW = values.PowerBlue * 1e-3;
   const waistUvM = values.WaistUV * 1e-6;
-  const waistBlueM = values.WaistBlue * 1e-6;
+  const waistBlueUm = BLUE_WAIST_RATIO * values.CavityWaist;
+  const waistBlueM = waistBlueUm * 1e-6;
+  const atomNumber = atomNumberFromDensity(values.AtomDensity, values.CavityWaist);
   const omegaBlue = rabiFrequencyFromDipole(
     DIPOLES_EA0.blue,
     powerBlueW,
@@ -145,8 +169,8 @@ function calculateParams() {
   const omegaUv = rabiFrequencyFromDipole(DIPOLES_EA0.uv, powerUvW, waistUvM)
     .Omega_MHz;
   const thetaUv = Math.atan(Math.abs(omegaUv / values.DeltaUV));
-  const nMm = values.Natoms * power(Math.sin(thetaUv), 2);
-  const nOpt = values.Natoms * power(Math.cos(thetaUv), 2);
+  const nMm = atomNumber * power(Math.sin(thetaUv), 2);
+  const nOpt = atomNumber * power(Math.cos(thetaUv), 2);
 
   return {
     Gopt: goptKHz * 1e-3 * Math.sqrt(nOpt),
@@ -164,6 +188,8 @@ function calculateParams() {
     omegaBlue,
     omegaUv,
     goptKHz,
+    atomNumber,
+    waistBlueUm,
     nMm,
   };
 }
@@ -467,6 +493,8 @@ function updatePlot() {
     byId("omega-b").textContent = formatMetric(data.params.OmegaB, " MHz");
     byId("omega-uv").textContent = formatMetric(data.params.omegaUv, " MHz");
     byId("single-atom-g").textContent = formatMetric(data.params.goptKHz, " kHz");
+    byId("atom-number").textContent = formatCountMetric(data.params.atomNumber);
+    byId("waist-blue").textContent = formatMetric(data.params.waistBlueUm, " um");
     byId("n-mm").textContent = formatCountMetric(data.params.nMm);
     setStatus("");
   } catch (error) {
@@ -571,6 +599,10 @@ function importCsvFile(file) {
       if (nameIndex < 0 || valueIndex < 0) throw new Error("CSV must include name and value columns.");
 
       let updated = 0;
+      const fieldValues = {};
+      let legacyAtomNumber = null;
+      let legacyWaistBlue = null;
+
       rows.forEach((row) => {
         const name = (row[nameIndex] || "").trim();
         const value = (row[valueIndex] || "").trim();
@@ -580,11 +612,31 @@ function importCsvFile(file) {
         } else if (name === "gopt_source") {
           byId("gopt-source").value = value;
           updated += 1;
+        } else if (name === "Natoms" && value !== "") {
+          legacyAtomNumber = Number(value);
+        } else if (name === "WaistBlue" && value !== "") {
+          legacyWaistBlue = Number(value);
         } else if (state.fields[name] && value !== "") {
-          state.fields[name].value = String(Number(value));
-          updated += 1;
+          fieldValues[name] = Number(value);
         }
       });
+
+      if (!hasOwn(fieldValues, "CavityWaist") && Number.isFinite(legacyWaistBlue)) {
+        fieldValues.CavityWaist = legacyWaistBlue / BLUE_WAIST_RATIO;
+      }
+
+      if (!hasOwn(fieldValues, "AtomDensity") && Number.isFinite(legacyAtomNumber)) {
+        const cavityWaistUm = hasOwn(fieldValues, "CavityWaist")
+          ? fieldValues.CavityWaist
+          : Number(state.fields.CavityWaist.value);
+        fieldValues.AtomDensity = atomDensityFromNumber(legacyAtomNumber, cavityWaistUm);
+      }
+
+      for (const [name, value] of Object.entries(fieldValues)) {
+        state.fields[name].value = String(value);
+        updated += 1;
+      }
+
       updatePlot();
       setStatus(`Imported ${updated} parameters from ${file.name}`);
     } catch (error) {

@@ -32,6 +32,10 @@ EFFICIENCY_FUNCTIONS = {
     "func_2": ("Efficiency Function 2", efficiency_func_2),
 }
 
+BLUE_WAIST_RATIO = 0.78
+DEFAULT_ATOM_NUMBER = 5e5
+DEFAULT_CAVITY_WAIST_UM = 1000.0 / BLUE_WAIST_RATIO
+
 RABI_CALCULATORS = {
     "arc": "ARC",
     "hardcoded": "Hard-coded dipoles",
@@ -43,14 +47,13 @@ INPUT_LABELS = {
     "gmm": "gmm (kHz)",
     "kappaOpt": "kappaOpt (MHz)",
     "kappaMM": "kappaMM (MHz)",
-    "Natoms": "Natoms",
-    "AtomRadius": "AtomRadius (um)",
+    "AtomDensity": "Atom density (cm^-3)",
     "gammaOpt": "gammaOpt (MHz)",
     "gammaMM": "gammaMM (kHz)",
     "PowerUV": "PowerUV (mW)",
     "PowerBlue": "PowerBlue (mW)",
+    "CavityWaist": "Cavity waist (um)",
     "WaistUV": "WaistUV (um)",
-    "WaistBlue": "WaistBlue (um)",
     "DeltaUV": "DeltaUV (MHz)",
     "FBlue": "FBlue",
     "Delta_e": "Delta_e (MHz)",
@@ -66,6 +69,19 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
         return f"{value:.6f}".rstrip("0").rstrip(".")
 
 
+def atom_number_from_density(density_cm3, cavity_waist_um):
+    radius_cm = cavity_waist_um * 1e-4
+    return density_cm3 * (4.0 / 3.0) * np.pi * radius_cm**3
+
+
+def atom_density_from_number(atom_number, cavity_waist_um):
+    radius_cm = cavity_waist_um * 1e-4
+    volume_cm3 = (4.0 / 3.0) * np.pi * radius_cm**3
+    if volume_cm3 <= 0:
+        return 0.0
+    return atom_number / volume_cm3
+
+
 class TransductionGui(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -76,7 +92,9 @@ class TransductionGui(QMainWindow):
         self.rabi_combo = None
         self.gopt_source_combo = None
         self.gopt_result_label = QLabel()
+        self.atom_number_result_label = QLabel()
         self.nmm_result_label = QLabel()
+        self.blue_waist_result_label = QLabel()
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
 
@@ -125,12 +143,22 @@ class TransductionGui(QMainWindow):
             self._make_group(
                 "Atom Parameters",
                 [
-                    ("Natoms", 5e5, 1.0, 1e10, 1e4),
-                    ("AtomRadius", 250.0, 0.001, 1e6, 10.0),
+                    (
+                        "AtomDensity",
+                        atom_density_from_number(
+                            DEFAULT_ATOM_NUMBER, DEFAULT_CAVITY_WAIST_UM
+                        ),
+                        0.0,
+                        1e16,
+                        1e6,
+                    ),
                     ("gammaOpt", 6.0, 1e-6, 1e4, 0.1),
                     ("gammaMM", 100.0, 0.001, 1e7, 1.0),
                 ],
-                extra_rows=[("N_mm", self.nmm_result_label)],
+                extra_rows=[
+                    ("Atom number", self.atom_number_result_label),
+                    ("N_mm", self.nmm_result_label),
+                ],
             )
         )
         layout.addWidget(
@@ -139,11 +167,12 @@ class TransductionGui(QMainWindow):
                 [
                     ("PowerUV", 250.0, 0.001, 1e6, 10.0),
                     ("PowerBlue", 300.0, 0.001, 1e6, 10.0),
+                    ("CavityWaist", DEFAULT_CAVITY_WAIST_UM, 0.001, 1e6, 10.0),
                     ("WaistUV", 1200.0, 0.001, 1e6, 10.0),
-                    ("WaistBlue", 1000.0, 0.001, 1e6, 10.0),
                     ("DeltaUV", 2.0, 1e-6, 1e4, 0.1),
                     ("FBlue", 200.0, 1e-6, 1e6, 1.0),
                 ],
+                extra_rows=[("Blue waist", self.blue_waist_result_label)],
             )
         )
         layout.addWidget(self._make_rabi_group())
@@ -336,46 +365,78 @@ class TransductionGui(QMainWindow):
             with open(file_path, newline="", encoding="utf-8-sig") as csv_file:
                 reader = csv.DictReader(csv_file)
                 updated_count = 0
+                parameter_values = {}
+                combo_values = {}
+                legacy_atom_number = None
+                legacy_waist_blue = None
+
                 for row in reader:
                     name = (row.get("name") or row.get("parameter") or "").strip()
+                    value_text = (row.get("value") or "").strip()
+                    if not name or not value_text:
+                        continue
+
                     if name == "gopt_source":
-                        value_text = (row.get("value") or "").strip()
-                        index = self.gopt_source_combo.findData(value_text)
-                        if index >= 0:
-                            self.gopt_source_combo.blockSignals(True)
-                            self.gopt_source_combo.setCurrentIndex(index)
-                            self.gopt_source_combo.blockSignals(False)
-                            updated_count += 1
+                        combo_values[name] = value_text
                         continue
                     if name == "efficiency_function":
-                        value_text = (row.get("value") or "").strip()
-                        index = self.efficiency_combo.findData(value_text)
-                        if index >= 0:
-                            self.efficiency_combo.blockSignals(True)
-                            self.efficiency_combo.setCurrentIndex(index)
-                            self.efficiency_combo.blockSignals(False)
-                            updated_count += 1
+                        combo_values[name] = value_text
                         continue
                     if name == "rabi_calculator":
-                        value_text = (row.get("value") or "").strip()
-                        index = self.rabi_combo.findData(value_text)
-                        if index >= 0:
-                            self.rabi_combo.blockSignals(True)
-                            self.rabi_combo.setCurrentIndex(index)
-                            self.rabi_combo.blockSignals(False)
-                            updated_count += 1
+                        combo_values[name] = value_text
+                        continue
+
+                    if name == "Natoms":
+                        legacy_atom_number = float(value_text)
+                        continue
+
+                    if name == "WaistBlue":
+                        legacy_waist_blue = float(value_text)
                         continue
 
                     if name not in self.inputs:
                         continue
 
-                    value_text = (row.get("value") or "").strip()
-                    if not value_text:
-                        continue
+                    parameter_values[name] = float(value_text)
 
+                if (
+                    "CavityWaist" not in parameter_values
+                    and legacy_waist_blue is not None
+                ):
+                    parameter_values["CavityWaist"] = (
+                        legacy_waist_blue / BLUE_WAIST_RATIO
+                    )
+
+                if (
+                    "AtomDensity" not in parameter_values
+                    and legacy_atom_number is not None
+                ):
+                    cavity_waist_um = parameter_values.get(
+                        "CavityWaist", self.inputs["CavityWaist"].value()
+                    )
+                    parameter_values["AtomDensity"] = atom_density_from_number(
+                        legacy_atom_number, cavity_waist_um
+                    )
+
+                for name, value_text in combo_values.items():
+                    if name == "gopt_source":
+                        combo = self.gopt_source_combo
+                    elif name == "efficiency_function":
+                        combo = self.efficiency_combo
+                    else:
+                        combo = self.rabi_combo
+
+                    index = combo.findData(value_text)
+                    if index >= 0:
+                        combo.blockSignals(True)
+                        combo.setCurrentIndex(index)
+                        combo.blockSignals(False)
+                        updated_count += 1
+
+                for name, value in parameter_values.items():
                     spin_box = self.inputs[name]
                     spin_box.blockSignals(True)
-                    spin_box.setValue(float(value_text))
+                    spin_box.setValue(value)
                     spin_box.blockSignals(False)
                     updated_count += 1
 
@@ -410,7 +471,11 @@ class TransductionGui(QMainWindow):
         power_uv_w = values["PowerUV"] * 1e-3
         power_blue_w = values["PowerBlue"] * 1e-3
         waist_uv_m = values["WaistUV"] * 1e-6
-        waist_blue_m = values["WaistBlue"] * 1e-6
+        waist_blue_um = BLUE_WAIST_RATIO * values["CavityWaist"]
+        waist_blue_m = waist_blue_um * 1e-6
+        atom_number = atom_number_from_density(
+            values["AtomDensity"], values["CavityWaist"]
+        )
 
         ground_state = (5, 0, 0.5, 0.5)
         excited_state = (5, 1, 1.5, 1.5)
@@ -434,8 +499,8 @@ class TransductionGui(QMainWindow):
         )["Omega_MHz"]
 
         theta_uv = np.arctan(abs(omega_uv / values["DeltaUV"]))
-        n_mm = values["Natoms"] * np.sin(theta_uv) ** 2
-        n_opt = values["Natoms"] * np.cos(theta_uv) ** 2
+        n_mm = atom_number * np.sin(theta_uv) ** 2
+        n_opt = atom_number * np.cos(theta_uv) ** 2
 
         params = {
             "Gopt": gopt_mhz * np.sqrt(n_opt),
@@ -453,7 +518,9 @@ class TransductionGui(QMainWindow):
         }
         derived = {
             "gopt_khz": gopt_mhz * 1e3,
+            "atom_number": atom_number,
             "N_mm": n_mm,
+            "WaistBlue": waist_blue_um,
         }
         return params, derived
 
@@ -599,7 +666,11 @@ class TransductionGui(QMainWindow):
         try:
             omega, eta, max_eff, fwhm, derived = self._calculate_plot_data()
             self.gopt_result_label.setText(f"{derived['gopt_khz']:.6g} kHz")
+            self.atom_number_result_label.setText(
+                f"{derived['atom_number']:.6g}"
+            )
             self.nmm_result_label.setText(f"{derived['N_mm']:.6g}")
+            self.blue_waist_result_label.setText(f"{derived['WaistBlue']:.6g} um")
             self._draw_efficiency_plot(self.ax, omega, eta, max_eff, fwhm, True)
             self.figure.tight_layout()
             self.status_label.setText("")

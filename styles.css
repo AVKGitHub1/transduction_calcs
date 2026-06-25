@@ -183,11 +183,9 @@ button:hover {
 }
 
 .plot-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  gap: 12px;
+  align-items: start;
   border-bottom: 1px solid var(--line);
   padding: 14px 16px;
 }
@@ -200,12 +198,13 @@ button:hover {
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 8px;
+  width: 100%;
 }
 
 .metrics div {
-  min-width: 96px;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel-soft);
