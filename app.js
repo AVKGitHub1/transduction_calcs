@@ -497,6 +497,8 @@ function updatePlot() {
     byId("omega-b").textContent = formatMetric(data.params.OmegaB, " MHz");
     byId("omega-uv").textContent = formatMetric(data.params.omegaUv, " MHz");
     byId("single-atom-g").textContent = formatMetric(data.params.goptKHz, " kHz");
+    byId("collective-gopt").textContent = formatMetric(data.params.Gopt, " MHz");
+    byId("collective-gmm").textContent = formatMetric(data.params.Gmm, " MHz");
     byId("atom-number").textContent = formatCountMetric(data.params.atomNumber);
     byId("waist-blue").textContent = formatMetric(data.params.waistBlueUm, " um");
     byId("n-mm").textContent = formatCountMetric(data.params.nMm);

@@ -93,6 +93,8 @@ class TransductionGui(QMainWindow):
         self.gopt_source = "manual"
         self.gopt_source_label = QLabel()
         self.gopt_result_label = QLabel()
+        self.collective_gopt_result_label = QLabel()
+        self.collective_gmm_result_label = QLabel()
         self.atom_number_result_label = QLabel()
         self.nmm_result_label = QLabel()
         self.blue_waist_result_label = QLabel()
@@ -140,6 +142,7 @@ class TransductionGui(QMainWindow):
             )
         )
         layout.addWidget(self._make_optical_coupling_group())
+        layout.addWidget(self._make_collective_coupling_group())
         layout.addWidget(
             self._make_group(
                 "Atom Parameters",
@@ -217,6 +220,15 @@ class TransductionGui(QMainWindow):
 
         form.addRow(self.gopt_source_label)
         form.addRow("g / 2pi", self.gopt_result_label)
+
+        return group
+
+    def _make_collective_coupling_group(self):
+        group = QGroupBox("Collective Couplings")
+        form = QFormLayout(group)
+
+        form.addRow("G_opt / 2pi", self.collective_gopt_result_label)
+        form.addRow("G_mm / 2pi", self.collective_gmm_result_label)
 
         return group
 
@@ -529,6 +541,8 @@ class TransductionGui(QMainWindow):
         }
         derived = {
             "gopt_khz": gopt_mhz * 1e3,
+            "Gopt_MHz": params["Gopt"],
+            "Gmm_MHz": params["Gmm"],
             "atom_number": atom_number,
             "N_mm": n_mm,
             "WaistBlue": waist_blue_um,
@@ -681,6 +695,12 @@ class TransductionGui(QMainWindow):
             else:
                 self.gopt_source_label.setText("g_opt calculated manually")
             self.gopt_result_label.setText(f"{derived['gopt_khz']:.6g} kHz")
+            self.collective_gopt_result_label.setText(
+                f"{derived['Gopt_MHz']:.6g} MHz"
+            )
+            self.collective_gmm_result_label.setText(
+                f"{derived['Gmm_MHz']:.6g} MHz"
+            )
             self.atom_number_result_label.setText(
                 f"{derived['atom_number']:.6g}"
             )
