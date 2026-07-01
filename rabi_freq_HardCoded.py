@@ -6,9 +6,9 @@ from scipy.constants import epsilon_0, c, hbar, elementary_charge, physical_cons
 # Blue: 5P3/2, mj=3/2 -> 55S1/2 with q=-1
 # UV:   5S1/2, mj=1/2 -> 54P3/2 with q=+1
 # Opt:  5S1/2, mj=1/2 -> 5P3/2, mj=3/2 with q=+1
-d_b = -6.93809e-03
-d_UV = 1.70762e-03
-d_opt = 2.98915
+d_b = -6.938086e-03
+d_UV = -1.394265e-03
+d_opt = 2.989150e+00
 
 OPTICAL_CAVITY_WAVELENGTH_M = 780.24e-9
 

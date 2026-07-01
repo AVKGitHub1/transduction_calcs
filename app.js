@@ -1,9 +1,9 @@
 "use strict";
 
 const DIPOLES_EA0 = {
-  blue: -6.93809e-3,
-  uv: 1.70762e-3,
-  optical: 2.98915,
+  blue: -6.938086e-03,
+  uv: -1.394265e-03,
+  optical: 2.989150e+00,
 };
 
 const CONSTANTS = {
