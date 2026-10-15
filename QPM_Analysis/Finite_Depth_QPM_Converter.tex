@@ -11,13 +11,13 @@
  pdftitle={Finite-depth QPM and Converter Efficiency},
  pdfsubject={Spatial overlap and a six-mode analytical transduction model}}
 \pagestyle{fancy}\fancyhf{}
-\fancyhead[L]{\small\color{muted}FINITE-DEPTH QPM}
+\fancyhead[L]{\small\color{muted}Finite-Depth QPM}
 \fancyhead[R]{\small\color{muted}\today}
 % \fancyfoot[L]{\small\color{muted}$^{85}$Rb\quad $1188\,\mathrm{nm}$ lattice}
 \fancyfoot[R]{\small\color{muted}\thepage}
 \renewcommand{\headrulewidth}{0.3pt}
 \author{Abhishek Karve}
-\title{Finite-depth QPM and Converter Efficiency}
+\title{Finite-depth Quasi-Phase Matching (QPM) and Converter Efficiency}
 \setlength{\parindent}{0pt}\setlength{\parskip}{5pt}
 \setlength{\abovedisplayskip}{7pt}\setlength{\belowdisplayskip}{7pt}
 \setlength{\abovedisplayshortskip}{4pt}\setlength{\belowdisplayshortskip}{4pt}
@@ -97,14 +97,119 @@ centres, through $|\langle e^{i\delta\mathbf k\cdot\mathbf R}\rangle|$.
 Beam angles, exact wavelengths, and mode envelopes must therefore be checked separately.
 
 \section{Analytical converter model with the orthogonal modes}
-This is a derived spatial-mode extension of the supplied converter equations~\cite{model}, in the
-atomic transduction setting of Ref.~\cite{kumar}. Set the notebook's $\epsilon=1$.
-The cavity amplitudes are $a$ (optical) and $b$ (microwave); $p,r$ are the useful optical
-and Rydberg collective amplitudes. Their orthogonal partners are $p_\perp,r_\perp$.
-Absorb the overlap phase into the mode definitions, leaving $Q$ real and nonnegative.
+\subsection{Problem definition and collective-mode construction.}
+This is a derived spatial-mode extension of the supplied converter equations~\cite{model},
+in the atomic transduction setting of Ref.~\cite{kumar}. We seek the coherent conversion
+amplitude from an optical input to the microwave output when the two atomic coupling
+profiles have the overlap $Q$ defined in Eq.~\eqref{eq:overlap}. Set the notebook's
+$\epsilon=1$ throughout.
 
-Retain the notebook's couplings $g_o=G/\sqrt2$, $g_m=G_\mu/\sqrt2$, and blue-control
-matrix element $\Om$. With its Fourier convention, define
+\textbf{Atomic variables and assumptions.}
+Let $\hat e_j^\dagger$ and $\hat r_j^\dagger$ create an optical and a Rydberg excitation,
+respectively, on atom $j$ relative to the prepared reference state. In the weak-excitation
+limit these operators are approximately bosonic:
+\begin{equation}
+ [\hat e_j,\hat e_\ell^\dagger]\simeq
+ [\hat r_j,\hat r_\ell^\dagger]\simeq\delta_{j\ell},\qquad
+ [\hat e_j,\hat r_\ell^\dagger]\simeq0.
+ \label{eq:atomic-bosons}
+\end{equation}
+Assume frozen atomic positions during conversion, a uniform blue-control magnitude,
+and identical atomic detunings and independent decay rates across the ensemble.
+UV dressing is already included in the effective microwave coupling and its spatial
+profile, as in the calculator. There is no additional UV mode to solve for here.
+After absorbing the blue field's spatial phase into $\hat r_j$, its matrix element
+$\Om$ can be chosen real and uniform. With the sign convention used below,
+\begin{equation}
+ \frac{\hat H_B}{\hbar}
+ =-\Om\sum_j\bigl(\hat e_j^\dagger\hat r_j+
+                         \hat r_j^\dagger\hat e_j\bigr).
+ \label{eq:uniform-blue}
+\end{equation}
+
+\textbf{The two coupling profiles.}
+In this phase convention, let $\mathbf u$ describe the collective optical excitation
+selected by the optical cavity, and $\mathbf v$ the Rydberg excitation selected by the
+UV-dressed microwave interaction. These are the profiles introduced in section~1:
+\begin{equation}
+ \mathbf u^\dagger\mathbf u=\mathbf v^\dagger\mathbf v=1,\qquad
+ \mathcal Q=\mathbf u^\dagger\mathbf v=\sum_j u_j^*v_j,\qquad
+ Q=|\mathcal Q|.
+ \label{eq:complex-overlap}
+\end{equation}
+A global phase of $\mathbf v$ can be absorbed into the microwave cavity operator, so
+we henceforth choose $\mathbf u^\dagger\mathbf v=Q\geq0$. Writing $s=\sqrt{1-Q^2}$,
+the microwave profile has the exact decomposition
+\begin{equation}
+ \boxed{\mathbf v=Q\mathbf u+s\mathbf w,}\qquad
+ \mathbf w=\frac{\mathbf v-Q\mathbf u}{s},\qquad
+ \mathbf u^\dagger\mathbf w=0,\quad\mathbf w^\dagger\mathbf w=1.
+ \label{eq:profile-decomposition}
+\end{equation}
+The expression for $\mathbf w$ applies when $Q<1$. At $Q=1$, choose any normalized
+orthogonal profile: its coupling to the microwave cavity vanishes because $s=0$.
+
+\textbf{Collective operators and closure.}
+Define four atomic operators, using uppercase letters to distinguish the operators
+from the coherent amplitudes used later:
+\begin{equation}
+ \begin{aligned}
+ \hat P^\dagger&=\sum_j u_j\hat e_j^\dagger,&
+ \hat R^\dagger&=\sum_j u_j\hat r_j^\dagger,\\
+ \hat P_\perp^\dagger&=\sum_j w_j\hat e_j^\dagger,&
+ \hat R_\perp^\dagger&=\sum_j w_j\hat r_j^\dagger.
+ \end{aligned}
+ \label{eq:collective-operators}
+\end{equation}
+To the same weak-excitation approximation, orthonormality gives unit commutators
+within each mode; distinct profiles commute. The optical cavity couples only to
+$\hat P$. Uniform blue control couples $\hat P$ to $\hat R$ and $\hat P_\perp$ to
+$\hat R_\perp$. The microwave cavity couples to
+$Q\hat R+s\hat R_\perp$. The two cavity profiles span at most a two-dimensional
+atomic subspace, preserved by the uniform control, detunings, and damping. Hence the
+coherently driven response closes on these four atomic modes plus the two cavity modes.
+All other orthogonal atomic modes have zero mean drive and are taken initially unexcited.
+
+\textbf{Hamiltonian and conventions.}
+Let $\hat a$ and $\hat b$ denote the optical and microwave cavity operators. Retain
+$g_o=G/\sqrt2$, $g_m=G_\mu/\sqrt2$, and the blue-control matrix element $\Om$ from
+the notebook, where $G$ and $G_\mu$ are the calculator's $G_{\rm opt}$ and $G_{\rm mm}$.
+In a rotating frame with zero optical-cavity detuning, the Hamiltonian
+restricted to the driven subspace is
+\begin{align}
+ \frac{\hat H_0}{\hbar}
+ &=-\Delta_\mu\hat b^\dagger\hat b
+   -\Delta_e(\hat P^\dagger\hat P+\hat P_\perp^\dagger\hat P_\perp)
+   -\Delta_r(\hat R^\dagger\hat R+\hat R_\perp^\dagger\hat R_\perp),
+   \label{eq:free-hamiltonian}\\
+ \frac{\hat H_{\rm int}}{\hbar}
+ &=-\Bigl[g_o\hat a^\dagger\hat P
+   +\Om(\hat P^\dagger\hat R+\hat P_\perp^\dagger\hat R_\perp)
+   +g_m\hat b^\dagger(Q\hat R+s\hat R_\perp)+\mathrm{h.c.}\Bigr].
+   \label{eq:interaction-hamiltonian}
+\end{align}
+The minus signs fix the detuning and coupling-phase convention to match
+Eq.~\eqref{eq:six}: use $\dot{\hat c}=(i/\hbar)[\hat H,\hat c]$ and Fourier amplitudes
+proportional to $e^{+i\omega t}$. In this convention an optical drive with photon-flux
+amplitude $a_{\rm in}(t)$ is represented by
+\begin{equation}
+ \frac{\hat H_{\rm d}}{\hbar}
+ =-\sqrt{\kappa_{o,\mathrm{ex}}}\,
+   \bigl[\hat a^\dagger a_{\rm in}(t)+a_{\rm in}^*(t)\hat a\bigr].
+ \label{eq:drive-hamiltonian}
+\end{equation}
+Here $|a_{\rm in}|^2$ is incident photon flux. Define
+$a=\langle\hat a\rangle$, $b=\langle\hat b\rangle$,
+$p=\langle\hat P\rangle$, $r=\langle\hat R\rangle$,
+$p_\perp=\langle\hat P_\perp\rangle$, and
+$r_\perp=\langle\hat R_\perp\rangle$.
+With no incident microwave field, the useful output has amplitude
+$b_{\rm out}=\sqrt{\kappa_{m,\mathrm{ex}}}\,b$ up to an overall port phase, so
+$S_{mo}=b_{\rm out}/a_{\rm in}$. Reservoir noise has zero mean in this response
+calculation; the transfer efficiency does not characterize added noise.
+
+\subsection{Response functions and linewidth conventions.}
+Including damping, the above Fourier and detuning conventions give
 \begin{equation}
  \begin{aligned}
  D_a&=\kappa_o/2+i\omega,&
@@ -120,7 +225,7 @@ model, not generated by QPM. The desired port rates are
 $\kappa_{o,\mathrm{ex}}$ and $\kappa_{m,\mathrm{ex}}$.
 
 \subsection{Six coupled equations.}
-With input photon-flux amplitude $a_{\rm in}$ and an arbitrary, fixed input phase,
+The coherent amplitudes defined above obey, with the chosen input phase,
 \begin{equation}
  \begin{aligned}
  D_a a-i g_o p &=i\sqrt{\kappa_{o,\mathrm{ex}}}\,a_{\rm in},\\
