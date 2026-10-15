@@ -101,8 +101,8 @@ Beam angles, exact wavelengths, and mode envelopes must therefore be checked sep
 This is a derived spatial-mode extension of the supplied converter equations~\cite{model},
 in the atomic transduction setting of Ref.~\cite{kumar}. We seek the coherent conversion
 amplitude from an optical input to the microwave output when the two atomic coupling
-profiles have the overlap $Q$ defined in Eq.~\eqref{eq:overlap}. Set the notebook's
-$\epsilon=1$ throughout.
+profiles have the overlap $Q$ defined in Eq.~\eqref{eq:overlap}. \footnote{Set the notebook's
+$\epsilon=1$ throughout.}
 
 \textbf{Atomic variables and assumptions.}
 Let $\hat e_j^\dagger$ and $\hat r_j^\dagger$ create an optical and a Rydberg excitation,
@@ -117,7 +117,7 @@ limit these operators are approximately bosonic:
 Assume frozen atomic positions during conversion, a uniform blue-control magnitude,
 and identical atomic detunings and independent decay rates across the ensemble.
 UV dressing is already included in the effective microwave coupling and its spatial
-profile, as in the calculator. There is no additional UV mode to solve for here.
+profile.
 After absorbing the blue field's spatial phase into $\hat r_j$, its matrix element
 $\Om$ can be chosen real and uniform. With the sign convention used below,
 \begin{equation}
@@ -162,10 +162,21 @@ from the coherent amplitudes used later:
  \label{eq:collective-operators}
 \end{equation}
 To the same weak-excitation approximation, orthonormality gives unit commutators
-within each mode; distinct profiles commute. The optical cavity couples only to
-$\hat P$. Uniform blue control couples $\hat P$ to $\hat R$ and $\hat P_\perp$ to
-$\hat R_\perp$. The microwave cavity couples to
-$Q\hat R+s\hat R_\perp$. The two cavity profiles span at most a two-dimensional
+within each mode; distinct profiles commute. The corresponding coupling chain is
+\begin{equation}
+ a
+ \xleftrightarrow{g_o} E_1
+ \xleftrightarrow{\Omega_B} R_1
+ \xleftrightarrow{Qg_m} b
+ \xleftrightarrow{s g_m} R_2
+ \xleftrightarrow{\Omega_B} E_2 .
+ \label{eq:coupling-chain}
+\end{equation}
+Here $a,b$ label the optical and microwave cavity modes. The chain labels
+$E_1,R_1,R_2,E_2$ denote the modes represented by
+$\hat P,\hat R,\hat R_\perp,\hat P_\perp$, respectively, and
+$\Omega_B=\Om$; $s=\sqrt{1-Q^2}$ as above.
+The two cavity profiles span at most a two-dimensional
 atomic subspace, preserved by the uniform control, detunings, and damping. Hence the
 coherently driven response closes on these four atomic modes plus the two cavity modes.
 All other orthogonal atomic modes have zero mean drive and are taken initially unexcited.
