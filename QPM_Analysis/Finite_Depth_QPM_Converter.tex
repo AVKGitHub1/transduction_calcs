@@ -1,35 +1,24 @@
 % Standalone source. Compile with pdflatex (twice) or tectonic.
 % No external figures or bibliography files are required.
-\documentclass[11pt,letterpaper]{article}
-\usepackage[margin=0.72in,headheight=14pt,headsep=17pt,footskip=24pt]{geometry}
+\documentclass[aps,pra,onecolumn,10pt,letterpaper,notitlepage,nofootinbib,amsmath,amssymb]{revtex4-2}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern,amsmath,amssymb,mathtools,booktabs,microtype}
-\usepackage{xcolor,fancyhdr,hyperref}
+\usepackage{lmodern,mathtools,booktabs,microtype}
+\usepackage{xcolor,hyperref}
 \definecolor{navy}{HTML}{203B5D}
-\definecolor{muted}{HTML}{56616E}
 \hypersetup{colorlinks=true,linkcolor=navy,urlcolor=navy,citecolor=navy,
  pdftitle={Finite-depth QPM and Converter Efficiency},
  pdfsubject={Spatial overlap and a six-mode analytical transduction model}}
-\pagestyle{fancy}\fancyhf{}
-\fancyhead[L]{\small\color{muted}Finite-Depth QPM}
-\fancyhead[R]{\small\color{muted}\today}
-% \fancyfoot[L]{\small\color{muted}$^{85}$Rb\quad $1188\,\mathrm{nm}$ lattice}
-\fancyfoot[R]{\small\color{muted}\thepage}
-\renewcommand{\headrulewidth}{0.3pt}
-\setlength{\parindent}{0pt}\setlength{\parskip}{5pt}
-\setlength{\abovedisplayskip}{7pt}\setlength{\belowdisplayskip}{7pt}
-\setlength{\abovedisplayshortskip}{4pt}\setlength{\belowdisplayshortskip}{4pt}
-\newcommand{\sect}[1]{\par\vspace{5pt}{\large\bfseries\color{black}#1}\par\vspace{2pt}}
 \newcommand{\kb}{k_{\mathrm B}}
 \newcommand{\ER}{E_{\mathrm R}}
 \newcommand{\kL}{k_{\mathrm L}}
 \newcommand{\Om}{\Omega}
 \newcommand{\etae}{\eta_{\mathrm{port}}}
 
+\begin{document}
 \title{Finite-depth Quasi-Phase Matching (QPM) and Converter Efficiency}
 \author{Abhishek V. Karve}
-
-\begin{document}
+\affiliation{Department of Applied Physics, Stanford University}
+\date{\today}
 \maketitle
 % {\LARGE\bfseries\color{black}Finite-depth QPM and converter efficiency\par}
 % \vspace{4pt}
@@ -55,11 +44,12 @@ implements and checks them; its notation is mapped to this text at the end~\cite
 
 
 \section{What the finite-depth QPM factor means}
+\label{sec:qpm}
 Label the $N$ atoms by $j=1,\ldots,N$. Let $u_j$ and $v_j$ be the complex excitation
 amplitudes on atom $j$ in the normalized collective profiles addressed by the
 optical/blue and UV/microwave paths. Each profile includes the relative coupling
 magnitudes and optical phases; its overall coupling strength is treated separately
-in section~2. Define
+in section~\ref{sec:model}. Define
 \begin{equation}
  Q=\left|\sum_j u_j^*v_j\right|,\qquad
  \sum_j|u_j|^2=\sum_j|v_j|^2=1,\qquad 0\leq Q\leq1.
@@ -125,6 +115,7 @@ centres, through $|\langle e^{i\delta\mathbf k\cdot\mathbf R}\rangle|$.
 Beam angles, exact wavelengths, and mode envelopes must therefore be checked separately.
 
 \section{Analytical converter model with the orthogonal modes}
+\label{sec:model}
 \subsection{Problem definition and collective-mode construction.}
 The system contains an optical cavity mode $\hat a$, a microwave cavity mode
 $\hat b$, and an ensemble with optically excited and Rydberg excitations. The optical
@@ -138,7 +129,7 @@ linear, weak-excitation regime. The conversion efficiency is the ratio of output
 microwave photon flux to input optical photon flux. It is not an energy-efficiency
 ratio: the control fields account for the difference between the photon energies.
 All couplings, detunings, and linewidths in the analytical equations are angular
-frequencies; numerical values divided by $2\pi$ are stated explicitly in section~3.
+frequencies; numerical values divided by $2\pi$ are stated explicitly in section~\ref{sec:example}.
 
 \subsubsection{Atomic variables and assumptions.}
 Let $\hat e_j^\dagger$ and $\hat r_j^\dagger$ create an optical and a Rydberg excitation,
@@ -173,7 +164,7 @@ With the sign convention used below,
 \subsubsection{The two coupling profiles.}
 In this phase convention, let $\mathbf u$ describe the collective optical excitation
 selected by the optical cavity, and $\mathbf v$ the Rydberg excitation selected by the
-UV-dressed microwave interaction. These are the profiles introduced in section~1:
+UV-dressed microwave interaction. These are the profiles introduced in section~\ref{sec:qpm}:
 \begin{equation}
  \mathbf u^\dagger\mathbf u=\mathbf v^\dagger\mathbf v=1,\qquad
  \mathcal Q=\mathbf u^\dagger\mathbf v=\sum_j u_j^*v_j,\qquad
@@ -358,6 +349,7 @@ At $Q=1$, the orthogonal pair decouples and the four-mode baseline model is reco
 at $Q=0$, coherent conversion vanishes.
 
 \section{On-resonance efficiency and the numerical value of \texorpdfstring{$Q$}{Q}}
+\label{sec:example}
 At $\omega=\Delta_e=\Delta_r=\Delta_\mu=0$, introduce the dimensionless
 cooperativities, which compare coherent coupling strengths with damping:
 \begin{equation}
@@ -469,9 +461,7 @@ these are labels for the same two-factor overlap assumption, not an extra axis.
 Finally, \texttt{etaOpt} and \texttt{etaMM} are the port fractions $\eta_o$ and
 $\eta_m$, applied through \texttt{EfficiencyQWithPorts} at fixed total linewidths.
 
-\vspace{2pt}
-{\footnotesize
-\begin{thebibliography}{3}\raggedright\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+\begin{thebibliography}{3}
 \bibitem{bloch} I. Bloch, J. Dalibard and W. Zwerger, \emph{Rev. Mod. Phys.} \textbf{80}, 885 (2008),
  Sec. II. \href{https://doi.org/10.1103/RevModPhys.80.885}{doi:10.1103/RevModPhys.80.885}.
 \bibitem{kumar} A. Kumar et al., \emph{Nature} \textbf{615}, 614--619 (2023).
@@ -480,5 +470,5 @@ $\eta_m$, applied through \texttt{EfficiencyQWithPorts} at fixed total linewidth
  \texttt{Abhishek\_Converter\_QPM.nb}.
  Calculator: \href{https://github.com/AVKGitHub1/transduction_calcs}{AVKGitHub1/transduction\_calcs},
  commit \texttt{30da8841b3c9}. The $Q$ extension is derived here.
-\end{thebibliography}}
+\end{thebibliography}
 \end{document}
