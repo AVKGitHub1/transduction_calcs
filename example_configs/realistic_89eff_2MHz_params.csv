@@ -1,0 +1,20 @@
+name,label,value
+gopt,gopt (kHz),25.0000000000
+ModeVolumeOpt,Optical mode volume (mm^3),0.0830000000000
+gmm,gmm (kHz),42.0000000000
+kappaOpt,kappaOpt (MHz),2.00000000000
+kappaMM,kappaMM (MHz),5.00000000000
+Delta_e,Delta_e (MHz),0.00000000000
+Delta_r,Delta_r (MHz),0.00000000000
+DeltaMM,DeltaMM (MHz),0.00000000000
+AtomDensity,Atom density (cm^-3),10000000000.0
+gammaOpt,gammaOpt (MHz),6.00000000000
+gammaMM,gammaMM (kHz),100.000000000
+PowerUV,PowerUV (mW),100.000000000
+PowerBlue,PowerBlue (mW),4.00000000000
+CavityWaist,Cavity waist (um),180.000000000
+WaistUV,WaistUV (um),200.000000000
+DeltaUV,DeltaUV (MHz),5.00000000000
+FBlue,FBlue,600.000000000
+efficiency_function,Efficiency Function,OtoM
+gopt_source,Optical g Calculation,manual
