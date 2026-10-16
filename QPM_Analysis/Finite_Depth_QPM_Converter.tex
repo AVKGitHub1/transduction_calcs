@@ -13,6 +13,11 @@
 \newcommand{\kL}{k_{\mathrm L}}
 \newcommand{\Om}{\Omega}
 \newcommand{\gadd}{\gamma_{m,\mathrm{f}}}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\makeatletter
+\renewcommand{\p@subsection}{}
+\makeatother
 
 \begin{document}
 \title{Finite-depth Quasi-Phase Matching (QPM) and Converter Efficiency}
@@ -32,20 +37,106 @@ efficiency, accounting for atomic loss, reflection, and port coupling.
 
 \section{Spatial overlap and lattice localization}
 \label{sec:qpm}
-Let $\mathbf u,\mathbf v$ be normalized optical/blue and UV/microwave excitation
-profiles, including relative coupling magnitudes and phases. Their amplitude overlap is
+\subsection{Definition and justification of the overlap \texorpdfstring{$Q$}{Q}}
+\label{sec:q-definition}
+A collective atomic mode specifies the excitation amplitude and phase on every
+atom. Let $|j\rangle$ denote a Rydberg excitation on atom $j$, with all other atoms
+in the prepared UV-dressed reference state. In a common atomic phase convention,
+the optical/blue and UV/microwave processes address the normalized states
 \begin{equation}
- Q=|\mathbf u^\dagger\mathbf v|,\qquad
- \mathbf u^\dagger\mathbf u=\mathbf v^\dagger\mathbf v=1,\qquad 0\leq Q\leq1.
+ |\psi_u\rangle=\sum_j u_j|j\rangle,\qquad
+ |\psi_v\rangle=\sum_j v_j|j\rangle,\qquad
+ \sum_j|u_j|^2=\sum_j|v_j|^2=1.
+ \label{eq:profile-states}
+\end{equation}
+These are two excitation patterns of the same atoms. The coefficients include
+relative coupling magnitudes and phases. Their amplitude overlap is
+\begin{equation}
+ Q=|\langle\psi_u|\psi_v\rangle|
+  =|\mathbf u^\dagger\mathbf v|,\qquad 0\leq Q\leq1.
  \label{eq:overlap}
 \end{equation}
-For traveling-wave fields with matched uniform envelopes,
-$Q=|\langle e^{i\Delta\mathbf k\cdot\mathbf r}\rangle|$, averaged over the atomic
-density, with
-$\Delta\mathbf k=\mathbf k_{780}+\mathbf k_{\rm blue}-\mathbf k_{\rm UV}-\mathbf k_\mu$.
-Wavevectors include propagation directions. Thus $Q^2$ gives the projection onto
-the useful mode; efficiency also depends on the coupled dynamics and losses.
+Thus $Q=1$ means that both processes address the same normalized state, up to an
+overall phase; $Q=0$ means that their excitation patterns are orthogonal.
+The squared overlap $Q^2$ is the projection weight of one normalized state onto
+the other. It is neither a fraction of participating atoms nor the full
+conversion efficiency, which also depends on the coupled dynamics and losses.
 
+For traveling-wave fields with matched uniform envelopes and $N$ atoms,
+\begin{equation}
+ Q=\left|\frac{1}{N}\sum_j e^{i\Delta\mathbf k\cdot\mathbf r_j}\right|
+  =|\langle e^{i\Delta\mathbf k\cdot\mathbf r}\rangle|,
+ \label{eq:phasor-overlap}
+\end{equation}
+where the last average is over the normalized atomic density and
+$\Delta\mathbf k=\mathbf k_{780}+\mathbf k_{\rm blue}-\mathbf k_{\rm UV}-\mathbf k_\mu$.
+Wavevectors include propagation directions. Each atom contributes a unit
+phasor: aligned phasors give $Q=1$, while phase cancellation reduces $Q$.
+Exact lattice QPM aligns the phases at the site centres; finite displacements
+within the wells leave a phase spread and reduce the coherent overlap.
+
+There are many possible collective modes, but only two directly addressed
+profiles in this model. After choosing the overall phase so that
+$\mathbf u^\dagger\mathbf v=Q\geq0$, write
+\begin{equation}
+ \mathbf v=Q\mathbf u+s\mathbf w,\qquad s=\sqrt{1-Q^2},\qquad
+ \mathbf w=\frac{\mathbf v-Q\mathbf u}{s},\qquad
+ \mathbf u^\dagger\mathbf w=0,\quad\mathbf w^\dagger\mathbf w=1.
+ \label{eq:profile-decomposition}
+\end{equation}
+At $Q=1$, choose any orthogonal $\mathbf w$; its microwave coupling vanishes.
+The vector $\mathbf w$ collects the entire component of $\mathbf v$ orthogonal
+to $\mathbf u$ into one normalized pattern. This is a change of basis with no
+discarded component. The microwave cavity couples to $\mathbf u$ with matrix
+element $Qg_m$ and to $\mathbf w$ with $\sqrt{1-Q^2}g_m$. Every remaining pattern
+can be chosen orthogonal to both $\mathbf u$ and $\mathbf v$, so neither cavity
+drives it directly. Section~\ref{sec:model} retains both addressed patterns and
+their optical-excited and Rydberg components.
+
+Indirect population of the remaining modes is excluded only under the assumed
+uniform internal response. With frozen positions, identical detunings, uniform
+independent amplitude damping, and uniform blue-control magnitude, the linear
+atomic dynamics preserve every spatial pattern after the blue phase is absorbed
+into the atomic basis. Initially unexcited profiles orthogonal to both addressed
+patterns then remain unexcited in the coherent response.
+For example, a common detuning acts as $\Delta I$, so its
+matrix element between orthogonal profiles is zero. If instead
+$\Delta_j=\Delta+\delta\Delta_j$, a profile $\mathbf z$ orthogonal to both
+addressed profiles can couple to $\mathbf u$ through
+\begin{equation}
+ \mathbf z^\dagger\operatorname{diag}(\Delta_j)\mathbf u
+ =\sum_j z_j^*\,\delta\Delta_j\,u_j,
+ \label{eq:inhomogeneous-mixing}
+\end{equation}
+which need not vanish. Spatial variations in control magnitude or damping can
+likewise mix profiles. The two-profile reduction is therefore exact for the
+stated linear model, while its applicability to a device requires checking
+these assumptions.
+
+Physically, a blue beam much wider than the participating cloud supports a
+uniform control magnitude. The original transducer derivation assumes uniform
+detunings and blue control, and reports a blue-beam waist larger than the optical
+cavity waist~\cite{kumarSI}. For the present geometry, differential lattice light
+shifts, UV dressing shifts, and field gradients must also be evaluated.
+A useful smallness check is $\delta\Delta_{\rm rms}\tau_{\rm resp}\ll1$, with
+detunings in angular-frequency units and $\tau_{\rm resp}$ the relevant response
+or coherence time; analogous checks apply to variations in control strength and
+damping. Their effect on the spectrum must be assessed if these checks fail.
+
+The benchmark in Sec.~\ref{sec:example} has
+$\tau_{\rm resp}=0.1095\,\mu$s and $\omega_t\tau_{\rm resp}=0.0314$, supporting
+frozen motion on the response timescale when the associated motional phase
+changes are small. This does not establish uniform detunings or control
+strengths. Deeper trapping improves localization but can also increase
+spatially varying differential light shifts. Consequently, computing $Q$ from
+the density alone does not validate the reduction: the present single-$Q$
+prediction is conditional on these uniformity assumptions. If appreciable
+mixing occurs, additional collective modes must be retained. The overlap in
+Eq.~\eqref{eq:overlap} remains well defined, but it no longer suffices to
+characterize the spatial dependence of the converter response.
+
+\subsection{Lattice localization and quasi-phase matching}
+\label{sec:lattice-localization}
 For lattice period $d=\lambda_{\mathrm L}/2$, define $\kL=2\pi/\lambda_{\mathrm L}$
 and $K=2\kL$. For lattice depth $U$, the harmonic approximation near a minimum gives~\cite{bloch}
 \begin{equation}
@@ -102,15 +193,8 @@ positions, uniform blue-control magnitude, identical atomic detunings, and
 uniform independent amplitude damping. Absorb the blue phase into $\hat r_j$ and the global
 profile phase into $\hat b$, so $\Om$ is real and $\mathbf u^\dagger\mathbf v=Q\geq0$.
 
-With $s=\sqrt{1-Q^2}$, decompose the microwave profile as
-\begin{equation}
- \mathbf v=Q\mathbf u+s\mathbf w,\qquad
- \mathbf w=\frac{\mathbf v-Q\mathbf u}{s},\qquad
- \mathbf u^\dagger\mathbf w=0,\quad\mathbf w^\dagger\mathbf w=1.
- \label{eq:profile-decomposition}
-\end{equation}
-At $Q=1$, choose any orthogonal $\mathbf w$; its microwave coupling vanishes.
-The four collective operators are
+Using the profiles in Eq.~\eqref{eq:profile-decomposition}, with
+$s=\sqrt{1-Q^2}$, the four collective operators are
 \begin{equation}
  \begin{aligned}
  \hat P^\dagger&=\sum_j u_j\hat e_j^\dagger,&
@@ -352,7 +436,5 @@ Eqs.~\eqref{eq:sigma} and \eqref{eq:eta0}, the latter at unit ports.
 Use \texttt{parmsScreenshot} for Eq.~\eqref{eq:benchmark}; \texttt{parmsOriginal}
 retains the original parameters. Keep $Q$ symbolic until applying \texttt{qRule}.
 
-% Retain the supplementary reference even though it is not cited in the text.
-\nocite{kumarSI}
 \bibliography{Finite_Depth_QPM_Converter}
 \end{document}
