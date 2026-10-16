@@ -1,8 +1,9 @@
-% Standalone source. Compile with pdflatex (twice) or tectonic.
+% Compile with latexmk -pdf, or pdflatex, bibtex, then pdflatex twice.
 \documentclass[aps,pra,onecolumn,10pt,letterpaper,notitlepage,nofootinbib,amsmath,amssymb]{revtex4-2}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern,mathtools,booktabs,microtype}
 \usepackage{xcolor,hyperref}
+\usepackage{graphicx,wrapfig}
 \definecolor{navy}{HTML}{203B5D}
 \hypersetup{colorlinks=true,linkcolor=navy,urlcolor=navy,citecolor=navy,
  pdftitle={Finite-depth QPM and Converter Efficiency},
@@ -11,7 +12,7 @@
 \newcommand{\ER}{E_{\mathrm R}}
 \newcommand{\kL}{k_{\mathrm L}}
 \newcommand{\Om}{\Omega}
-\newcommand{\gadd}{\gamma_{m,\mathrm{add}}}
+\newcommand{\gadd}{\gamma_{m,\mathrm{f}}}
 
 \begin{document}
 \title{Finite-depth Quasi-Phase Matching (QPM) and Converter Efficiency}
@@ -21,13 +22,13 @@
 \maketitle
 
 An ensemble of $^{85}$Rb atoms couples optical (780 nm) and microwave cavities
-through a blue (480/481 nm) control and UV (297 nm) dressing~\cite{kumar}.
+via an \textbf{assumed uniform} blue (480/481 nm) control field and UV (297 nm) dressing~\cite{kumar}.
 Optical-to-microwave conversion absorbs optical and blue photons and emits
 microwave and UV photons; reversing the loop reverses conversion.
-A separate 1188 nm lattice provides the periodic density for quasi-phase matching
-(QPM). Finite site width reduces the overlap of the two collective atomic
-profiles. We derive its effect on coherent photon-number efficiency, including
-atomic loss, reflection, and useful cavity ports.
+A separate 1188 nm lattice creates periodic density for quasi-phase
+matching (QPM). Finite site width reduces the overlap between the collective
+atomic profiles. We derive its effect on coherent photon-number conversion
+efficiency, accounting for atomic loss, reflection, and port coupling.
 
 \section{Spatial overlap and lattice localization}
 \label{sec:qpm}
@@ -38,15 +39,15 @@ profiles, including relative coupling magnitudes and phases. Their amplitude ove
  \mathbf u^\dagger\mathbf u=\mathbf v^\dagger\mathbf v=1,\qquad 0\leq Q\leq1.
  \label{eq:overlap}
 \end{equation}
-For matched uniform envelopes,
+For traveling-wave fields with matched uniform envelopes,
 $Q=|\langle e^{i\Delta\mathbf k\cdot\mathbf r}\rangle|$, averaged over the atomic
 density, with
 $\Delta\mathbf k=\mathbf k_{780}+\mathbf k_{\rm blue}-\mathbf k_{\rm UV}-\mathbf k_\mu$.
-Wavevectors include propagation directions. Thus $Q^2$ is a useful-mode projection;
-conversion also depends on the coupled response and losses.
+Wavevectors include propagation directions. Thus $Q^2$ gives the projection onto
+the useful mode; efficiency also depends on the coupled dynamics and losses.
 
 For lattice period $d=\lambda_{\mathrm L}/2$, define $\kL=2\pi/\lambda_{\mathrm L}$
-and $K=2\kL$. Near a minimum of depth $U$, the harmonic approximation gives~\cite{bloch}
+and $K=2\kL$. For lattice depth $U$, the harmonic approximation near a minimum gives~\cite{bloch}
 \begin{equation}
  V(x)=U\sin^2(\kL x)\simeq U\kL^2x^2,\qquad
  \ER=\frac{\hbar^2\kL^2}{2m},\qquad
@@ -63,14 +64,14 @@ At temperature $T$, the position variance and density harmonics are
        \coth\!\left(\frac{\sqrt{U\ER}}{\kb T}\right)\right].
  \label{eq:bn}
 \end{align}
-Here $n$ is a spatial harmonic order. At $T=0$, zero-point width still gives
-$b_n<1$ for $n\ne0$; deeper trapping increases the overlap. The harmonic treatment
-requires localization near the minimum.
+Here $n$ labels the spatial harmonic. Even at $T=0$, zero-point motion gives
+$b_n<1$ for $n\ne0$; deeper trapping increases the overlap. The harmonic approximation
+requires localization near a minimum.
 
 Exact matching, $\Delta\mathbf k=\sum_i n_i\mathbf K_i$, aligns the phases of
-occupied site centres. Independent in-site displacements then give
+occupied site centres. Independent displacements within sites then give
 \begin{equation}
- Q=\prod_i b_{n_i,i};\qquad Q=b_{2,x}b_{2,y}
+ Q=\prod_i b_{n_i,i};\qquad Q=b_{2,x}\; b_{2,y}
  \quad\text{for two second-order axes}.
  \label{eq:qproduct}
 \end{equation}
@@ -81,24 +82,24 @@ $\mathbf K_i=K\hat{\mathbf i}$. The target $(n_x,n_y)=(2,-2)$ requires
  -k_{\rm UV}-k_{\mu,y}=-2K,\qquad k_{\mu,z}=0.
  \label{eq:geometry-components}
 \end{equation}
-This geometry is conditional on actual wavelengths and angles. Neglecting
-$\mathbf k_\mu$, nominal 780, 1188, and 480 (481) nm give residual
+Exact matching depends on the wavelengths and beam angles.
+Neglecting $\mathbf k_\mu$, nominal wavelengths of 780, 1188, and 480 (481) nm give
 $\delta k_x=-0.01017$ ($-0.03738$) rad/$\mu$m. For Gaussian site-centre rms widths
 $L_i$, residual mismatch adds the factor
-$\exp[-\sum_i(\delta k_iL_i)^2/2]$; negligible cancellation requires
-$|\delta k_i|L_i\ll1$. In-site factors and mode envelopes must likewise be
- evaluated for the actual geometry. The benchmark below assumes exact matching.
+$\exp[-\sum_i(\delta k_iL_i)^2/2]$; negligible suppression requires
+$|\delta k_i|L_i\ll1$. Site factors and mode envelopes must also be evaluated
+for the actual geometry. The benchmark below assumes exact matching.
 
 \section{Six-mode converter response}
 \label{sec:model}
 \subsection{Collective modes and assumptions}
-Let $\hat a,\hat b$ denote the optical and microwave cavities, and
+Let $\hat a,\hat b$ annihilate optical and microwave cavity photons, and let
 $\hat e_j^\dagger,\hat r_j^\dagger$ create optical and Rydberg excitations from the
 prepared UV-dressed state on atom $j$. UV dressing mixes the ground and auxiliary
-Rydberg states; its effect is included in $g_m$ and $\mathbf v$.
+Rydberg states; the couplings and profiles include this dressing.
 Weak excitation makes these operators approximately bosonic. Assume frozen
 positions, uniform blue-control magnitude, identical atomic detunings, and
-uniform independent damping. Absorb the blue phase into $\hat r_j$ and the global
+uniform independent amplitude damping. Absorb the blue phase into $\hat r_j$ and the global
 profile phase into $\hat b$, so $\Om$ is real and $\mathbf u^\dagger\mathbf v=Q\geq0$.
 
 With $s=\sqrt{1-Q^2}$, decompose the microwave profile as
@@ -127,7 +128,7 @@ only these four atomic modes and two cavities are driven. Their coupling chain i
  \xleftrightarrow{\Om}P_\perp.
  \label{eq:coupling-chain}
 \end{equation}
-The orthogonal pair is a different excitation pattern of the same atoms. It is
+The orthogonal pair is a distinct excitation pattern of the same atoms. It is
 dark to the optical cavity but couples to the microwave cavity and blue field;
 atomic decay makes its response dissipative.
 
@@ -141,15 +142,15 @@ The interaction Hamiltonian fixes the coupling convention:
 \end{equation}
 The collective matrix elements $g_o,g_m$ are held fixed as $Q$ varies.
 The notebooks use $g_o=G/\sqrt2$, $g_m=G_\mu/\sqrt2$~\cite{model}; these factors
-are conventions, not finite-depth corrections. Here $\Om$ is the Hamiltonian
-matrix element, so any Rabi-frequency convention with an extra $1/2$ must be converted.
+reflect conventions, not finite-depth corrections. Here $\Om$ is the
+Hamiltonian matrix element; Rabi frequencies defined with an extra $1/2$ require conversion.
 All rates, detunings, and frequencies are angular frequencies.
 
 \subsection{Damping and driven equations}
 Let $\kappa_o,\kappa_m$ be bare cavity energy decay rates, including ports and
 internal loss; useful port rates obey $\kappa_{j,\mathrm{ex}}\leq\kappa_j$.
 Atomic amplitude decay rates are $\Gamma/2,\gamma_r/2$.
-Loss through explicit atomic modes must not be counted again in $\gadd$.
+Additional microwave energy decay $\gadd$ includes loss from the lower Rydberg state.
 
 Using Fourier amplitudes $e^{+i\omega t}$ and zero optical-cavity detuning, define
 \begin{equation}
@@ -161,8 +162,8 @@ Using Fourier amplitudes $e^{+i\omega t}$ and zero optical-cavity detuning, defi
  \end{aligned}
  \label{eq:D}
 \end{equation}
-Lowercase variables denote mean amplitudes of their corresponding operators.
-For optical input $a_{\rm in}$, with incident photon flux $|a_{\rm in}|^2$, the response is
+Lowercase variables denote the corresponding mean amplitudes.
+For optical input $a_{\rm in}$ with photon flux $|a_{\rm in}|^2$, the response is
 \begin{equation}
  \begin{aligned}
  D_a a-i g_o p &=i\sqrt{\kappa_{o,\mathrm{ex}}}\,a_{\rm in},\\
@@ -175,8 +176,8 @@ For optical input $a_{\rm in}$, with incident photon flux $|a_{\rm in}|^2$, the 
  \label{eq:six}
 \end{equation}
 With no microwave input, $b_{\rm out}=\sqrt{\kappa_{m,\mathrm{ex}}}\,b$ up to a
-port phase. Thus $S_{mo}=b_{\rm out}/a_{\rm in}$ and $\eta=|S_{mo}|^2$ measure
-coherent photon-number conversion, not energy efficiency or added noise.
+port phase. The transfer amplitude $S_{mo}=b_{\rm out}/a_{\rm in}$ gives the coherent
+photon-number efficiency $\eta=|S_{mo}|^2$, not energy efficiency or added noise.
 
 \subsection{Atomic feedback and transfer function}
 Set $F=D_eD_r+\Om^2$. Eliminating the orthogonal pair gives
@@ -185,11 +186,11 @@ Set $F=D_eD_r+\Om^2$. Eliminating the orthogonal pair gives
  \Sigma_\perp=\frac{g_m^2(1-Q^2)D_e}{F}.
  \label{eq:sigma}
 \end{equation}
-Its feedback changes $D_b$ to $D_b+\Sigma_\perp$, adding full linewidth
-$2\operatorname{Re}\Sigma_\perp$ and dispersion $\operatorname{Im}\Sigma_\perp$.
+This changes $D_b$ to $D_b+\Sigma_\perp$, with frequency-dependent energy-decay
+contribution $2\operatorname{Re}\Sigma_\perp$ and dispersion $\operatorname{Im}\Sigma_\perp$.
 This loading does not contribute to the useful output-port rate.
 
-Eliminating all atomic amplitudes gives the exact frequency-domain reduction
+Eliminating all atomic amplitudes gives the exact frequency-domain response
 \begin{equation}
  \begin{pmatrix}A&iJ\\iJ&B\end{pmatrix}
  \begin{pmatrix}a\\b\end{pmatrix}
@@ -199,7 +200,7 @@ Eliminating all atomic amplitudes gives the exact frequency-domain reduction
  B=D_b+\frac{g_m^2D_e}{F},\quad J=\frac{Qg_og_m\Om}{F},
  \label{eq:effective-cavities}
 \end{equation}
-without assuming fast atomic relaxation. Consequently,
+without assuming fast atomic relaxation. The transfer function is
 \begin{equation}
  \boxed{S_{mo}(\omega)=
  \frac{\sqrt{\kappa_{o,\mathrm{ex}}\kappa_{m,\mathrm{ex}}}\,J}{AB+J^2},
@@ -207,23 +208,11 @@ without assuming fast atomic relaxation. Consequently,
  \label{eq:transfer}
 \end{equation}
 At fixed couplings and linewidths, $A,B$ are independent of $Q$, whereas $J\propto Q$:
-the microwave profile's useful and orthogonal loading add as $Q^2+(1-Q^2)=1$.
-Replacing $g_m$ by $Qg_m$ incorrectly reduces that total loading as well as the
+the useful and orthogonal contributions to microwave loading sum as $Q^2+(1-Q^2)=1$.
+Replacing $g_m$ by $Qg_m$ incorrectly reduces the total loading as well as the
 cross coupling. At $Q=1$ the orthogonal pair decouples; at $Q=0$ conversion vanishes.
 
-\subsection{On-resonance matching}
-At $\omega=\Delta_e=\Delta_r=\Delta_\mu=0$, $A,B>0$ and $J$ are real. Then
-\begin{equation}
- \mathcal C=\frac{J^2}{AB},\qquad
- \boxed{\eta(0)=\frac{\kappa_{o,\mathrm{ex}}}{2A}
- \frac{\kappa_{m,\mathrm{ex}}}{2B}\frac{4\mathcal C}{(1+\mathcal C)^2}.}
- \label{eq:matching}
-\end{equation}
-The first two factors compare useful escape with dressed damping; the last peaks
-at $\mathcal C=1$. At fixed $A,B$, reducing $Q$ lowers conversion when
-$\mathcal C<1$, but can improve it when $\mathcal C>1$ by restoring matching.
-Internal loss can leave reflection even at this optimum.
-
+\subsection{On-resonance efficiency}
 For comparison with the notebooks, define
 \begin{equation}
  C_o=\frac{2G^2}{\kappa_o\Gamma},\qquad
@@ -232,18 +221,21 @@ For comparison with the notebooks, define
  \eta_j=\frac{\kappa_{j,\mathrm{ex}}}{\kappa_j}.
  \label{eq:coops}
 \end{equation}
-Equivalently,
-\begin{align}
- \eta(0)&=\eta_o\eta_m\frac{\kappa_m}{\kappa_m+\gadd}
+At $\omega=\Delta_e=\Delta_r=\Delta_\mu=0$, Eq.~\eqref{eq:transfer} gives
+\begin{equation}
+ \eta(0)=\eta_o\eta_m\frac{\kappa_m}{\kappa_m+\gadd}
  \frac{4Q^2C_oC_mC_B(1+C_B)^2}
- {[(1+C_B+C_o)(1+C_B+C_m)+Q^2C_oC_mC_B]^2},
- \label{eq:eta0}\\
- \mathcal C&=\frac{Q^2C_oC_mC_B}{(1+C_B+C_o)(1+C_B+C_m)}.
- \label{eq:matching-coops}
-\end{align}
-Port fractions multiply efficiency only at fixed total linewidths; changing port
+ {[(1+C_B+C_o)(1+C_B+C_m)+Q^2C_oC_mC_B]^2}.
+ \label{eq:eta0}
+\end{equation}
+The non-QPM model in \texttt{Abhishek\_Converter.nb} assumes fully overlapping
+collective profiles. Finite overlap modifies both the numerator and denominator
+of Eq.~\eqref{eq:eta0}; setting $Q=1$ recovers the non-QPM efficiency for the same
+couplings, losses, and port fractions.
+
+Port fractions multiply efficiency at fixed total linewidths; changing port
 coupling requires updated cooperativities. Propagation and detection losses further
-multiply this port-to-port result.
+reduce this port-to-port efficiency.
 
 \section{Numerical benchmark and loss budget}
 \label{sec:example}
@@ -259,18 +251,17 @@ For $\ER/\kb=0.0799004\,\mu$K, $T=0$, and two exactly matched second-order axes,
 \end{equation}
 The lattice has $U/\ER=187.7$, $\sigma_x=36.12$ nm, and $2K\sigma_x=0.7641$.
 Thus a deep lattice still leaves substantial phase spread at the second harmonic;
-two axes multiply the reductions. The trap frequency is
+the overlap reductions multiply across the two axes. The trap frequency is
 $\omega_t/(2\pi)=45.62$ kHz, with $\hbar\omega_t/\kb=2.190\,\mu$K.
-The ground-state benchmark requires temperature small on this scale;
+The ground-state benchmark requires a temperature well below this scale;
 at $T=1\,\mu$K the same harmonic formula gives $Q=0.48137$.
 
-Using this equilibrium density as a static profile also requires
-$\omega_t\tau_{\rm resp}\ll1$ and unresolved motional sidebands. This is a
-condition on evolution during conversion, separate from the phase spread
-$nK\sigma_x$ retained exactly in the Gaussian average. The calculation describes
-the coherent response, not the inelastic motional spectrum.
+Treating this density as static requires unresolved motional sidebands and
+negligible Doppler and recoil phases during $\tau_{\rm resp}$. The Gaussian average
+retains the full phase spread $nK\sigma_x$; the calculation describes the coherent
+response, not the inelastic motional spectrum.
 
-\subsection{Conversion and matching}
+\subsection{Conversion efficiency}
 Use zero detunings, $\gadd=\gamma_r$, and
 \begin{equation}
  \frac{(G,G_\mu,\Om)}{2\pi}=(15.8474565,\,2.09170145,\,5.52497339)\,\mathrm{MHz},
@@ -279,30 +270,29 @@ Use zero detunings, $\gadd=\gamma_r$, and
  \label{eq:benchmark}
 \end{equation}
 Dividing every rate and frequency by $2\pi$ leaves efficiency unchanged.
-For unit port fractions:
-\begin{center}
-\begin{tabular}{@{}lc@{}}
-\toprule
-Model & On-resonance efficiency\\
-\midrule
-Matched profiles, $Q=1$ & $82.0957\%$\\
-Naive scaling, $Q^2\eta(Q=1)$ & $25.5373\%$\\
-Only $G_\mu\mapsto QG_\mu$; orthogonal pair omitted & $51.5929\%$\\
-Six modes, $Q=0.557734$ & $\mathbf{47.0824\%}$\\
-\bottomrule
-\end{tabular}
-\end{center}
-Here $\Sigma_\perp/(2\pi)=0.147394$ MHz, giving added full linewidth
-$0.294787$ MHz. The dressed responses are $A/(2\pi)=5.20468$ MHz and
-$B/(2\pi)=2.76394$ MHz; $\mathcal C$ falls from $0.61947$ at $Q=1$ to
-$0.19270$, worsening matching. With other parameters fixed, port fractions
-$\eta_o=\eta_m=0.98$ give $45.2180\%$; $T=1\,\mu$K instead gives $38.15\%$
-at unit ports. Setting only $\gadd=0$ gives $48.54\%$ at $T=0$.
+Figure~\ref{fig:comparison} compares the unit-port spectra. The peak efficiency
+falls from $82.0957\%$ at $Q=1$ to $47.0824\%$ at $T=0$ and $38.15\%$ at
+$T=1\,\mu$K. Naive $Q^2$ scaling instead gives $25.5373\%$ at $T=0$.
+
+\begin{figure}[ht]
+ \centering
+ \includegraphics[width=0.6\textwidth]{figs/Comparison_plot.png}
+ \caption{Conversion spectra from Eq.~\eqref{eq:transfer} versus $\omega/(2\pi)$, with parameters in Eq.~\eqref{eq:benchmark},
+ unit port fractions, and $U/\kb=15\,\mu$K per axis. QPM overlaps follow Eqs.~\eqref{eq:bn}--\eqref{eq:qproduct}.}
+ \label{fig:comparison}
+\end{figure}
+
+At $T=0$ and resonance, $\Sigma_\perp/(2\pi)=0.147394$ MHz gives an energy-decay
+contribution $2\operatorname{Re}\Sigma_\perp/(2\pi)=0.294787$ MHz.
+The dressed responses are $A/(2\pi)=5.20468$ MHz and
+$B/(2\pi)=2.76394$ MHz. At $T=0$, changing only the port fractions to
+$\eta_o=\eta_m=0.98$ gives $45.2180\%$; setting only $\gadd=0$ gives $48.54\%$
+at unit ports.
 
 The slowest amplitude decay rate of the six-mode drift matrix is
 $2\pi\times1.4533$ MHz, so $\tau_{\rm resp}=0.1095\,\mu$s and
-$\omega_t\tau_{\rm resp}=0.0314$. This supports frozen motion for this benchmark;
-a narrower converter response requires a new check.
+$\omega_t\tau_{\rm resp}=0.0314$. Combined with the site width, this supports frozen
+motion; a narrower response requires rechecking these conditions.
 
 \subsection{Reflection and dissipation}
 With the drive convention of Eq.~\eqref{eq:six},
@@ -318,7 +308,7 @@ For incident flux $\Phi=|a_{\rm in}|^2$, define
  \label{eq:flux-budget}
 \end{equation}
 The passive model obeys $\mathcal R_o+\eta+\mathcal L_{\rm at}+\mathcal L_o+\mathcal L_m=1$.
-The unit-port benchmark budget, in percent of incident flux, is
+On resonance, the unit-port flux budget (percent) is
 \begin{center}
 \begin{tabular}{@{}l@{\hspace{2em}}r@{\hspace{1.5em}}r@{}}
 \toprule
@@ -331,21 +321,20 @@ Added microwave dissipation & 1.6419 & 0.9416\\
 \bottomrule
 \end{tabular}
 \end{center}
-The orthogonal pair dissipates $2.7759\%$, included in the atomic total.
-Of the $35.0133$-point conversion reduction, $33.8487$ points appear as increased
-reflection. Mode mismatch mainly changes matching here; its penalty is neither
-$1-Q^2$ nor the loss directly dissipated in the orthogonal pair.
+With mismatched profiles, the orthogonal pair dissipates $2.7759\%$, included in the atomic total.
+Of the $35.0133$-percentage-point drop in conversion, $33.8487$ points appear as
+increased reflection. Mode mismatch mainly increases reflection here; the conversion
+penalty is neither $1-Q^2$ nor the orthogonal pair's dissipation.
 
 \section{Validity and notebook conventions}
 Anharmonic motion, resolved sidebands, inhomogeneous controls or detunings, and
-additional independent optical channels require an extended response.
-The notebooks and direct matrix solutions check the six-mode reduction, $Q=1$
-limit, benchmark, and flux conservation; they do not validate the geometry or
-supply a microscopic origin for $\gadd$.
+additional independent optical channels require an extended model.
+The notebooks and direct matrix solutions verify the six-mode reduction, $Q=1$
+limit, benchmark, and flux conservation; they do not validate the geometry.
 
 In \texttt{Abhishek\_Converter\_QPM.nb}, set $\epsilon=1$ and
-$\gadd=\gamma_r$ (the latter is implicit). Its $\kappa,\kappa_\mu$ mean
-$\kappa_o,\kappa_m$; the calculator's $G_{\rm opt},G_{\rm mm}$ mean $G,G_\mu$.
+$\gadd=\gamma_r$ (the latter is implicit). Its $\kappa,\kappa_\mu$ denote
+$\kappa_o,\kappa_m$; the calculator's $G_{\rm opt},G_{\rm mm}$ denote $G,G_\mu$.
 The notebook uses $x,z$ for the two axes called $x,y$ here.
 Since \texttt{ConverterEfficQ} retains its forcing amplitude \texttt{Ein},
 \begin{equation}
@@ -363,17 +352,7 @@ Eqs.~\eqref{eq:sigma} and \eqref{eq:eta0}, the latter at unit ports.
 Use \texttt{parmsScreenshot} for Eq.~\eqref{eq:benchmark}; \texttt{parmsOriginal}
 retains the original parameters. Keep $Q$ symbolic until applying \texttt{qRule}.
 
-\begin{thebibliography}{4}
-\bibitem{bloch} I. Bloch, J. Dalibard and W. Zwerger, \emph{Rev. Mod. Phys.} \textbf{80}, 885 (2008),
- Sec. II. \href{https://doi.org/10.1103/RevModPhys.80.885}{doi:10.1103/RevModPhys.80.885}.
-\bibitem{kumar} A. Kumar et al., \emph{Nature} \textbf{615}, 614--619 (2023).
- \href{https://doi.org/10.1038/s41586-023-05740-2}{doi:10.1038/s41586-023-05740-2}.
-\bibitem{kumarSI} A. Kumar et al., \emph{Quantum-limited millimeter wave to optical
- transduction}, arXiv:2207.10121 (2022), Supplement B.1--B.3.
- \href{https://arxiv.org/html/2207.10121}{Full text and supplement}.
-\bibitem{model} {\raggedright Baseline: \texttt{Abhishek\_Converter.nb}; QPM implementation:
- \texttt{Abhishek\_Converter\_QPM.nb}. Code and calculator:
- \href{https://github.com/AVKGitHub1/transduction_calcs}{AVKGitHub1/transduction\_calcs},
- commit \texttt{30da8841b3c9}. The $Q$ extension is derived here.\par}
-\end{thebibliography}
+% Retain the supplementary reference even though it is not cited in the text.
+\nocite{kumarSI}
+\bibliography{Finite_Depth_QPM_Converter}
 \end{document}
