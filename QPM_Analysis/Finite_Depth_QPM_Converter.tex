@@ -49,11 +49,19 @@ the optical/blue and UV/microwave processes address the normalized states
  \sum_j|u_j|^2=\sum_j|v_j|^2=1.
  \label{eq:profile-states}
 \end{equation}
-These are two excitation patterns of the same atoms. The coefficients include
-relative coupling magnitudes and phases. Their amplitude overlap is
+These are two excitation patterns of the same atoms and the same chosen
+internal Rydberg state. The coefficient $u_j$ is the complex excitation
+amplitude assigned to atom $j$ by the optical/blue path, while $v_j$ is its
+counterpart for the UV/microwave path. Each coefficient specifies a relative
+coupling magnitude and a phase, rather than a time-dependent population.
+Conditional on the normalized state being $|\psi_u\rangle$, $|u_j|^2$ is the
+probability of finding the excitation on atom $j$; the same interpretation
+holds for $v_j$ in $|\psi_v\rangle$. Since $\langle j|\ell\rangle=\delta_{j\ell}$,
+their amplitude overlap is
 \begin{equation}
  Q=|\langle\psi_u|\psi_v\rangle|
-  =|\mathbf u^\dagger\mathbf v|,\qquad 0\leq Q\leq1.
+  =|\mathbf u^\dagger\mathbf v|
+  =\left|\sum_j u_j^*v_j\right|,\qquad 0\leq Q\leq1.
  \label{eq:overlap}
 \end{equation}
 Thus $Q=1$ means that both processes address the same normalized state, up to an
@@ -62,7 +70,17 @@ The squared overlap $Q^2$ is the projection weight of one normalized state onto
 the other. It is neither a fraction of participating atoms nor the full
 conversion efficiency, which also depends on the coupled dynamics and losses.
 
-For traveling-wave fields with matched uniform envelopes and $N$ atoms,
+For traveling-wave fields with matched uniform envelopes and $N$ atoms, all
+atoms have equal excitation magnitude $1/\sqrt N$. One may choose the phases as
+\[
+ u_j=\frac{e^{i(\mathbf k_{780}+\mathbf k_{\rm blue})\cdot\mathbf r_j}}{\sqrt N},
+ \qquad
+ v_j=\frac{e^{i(\mathbf k_{\rm UV}+\mathbf k_\mu)\cdot\mathbf r_j}}{\sqrt N}.
+\]
+Substitution into Eq.~\eqref{eq:overlap} gives
+$\mathbf u^\dagger\mathbf v=N^{-1}\sum_j e^{-i\Delta\mathbf k\cdot\mathbf r_j}$.
+Changing the sign of the exponent complex-conjugates the sum without changing
+its magnitude, so
 \begin{equation}
  Q=\left|\frac{1}{N}\sum_j e^{i\Delta\mathbf k\cdot\mathbf r_j}\right|
   =|\langle e^{i\Delta\mathbf k\cdot\mathbf r}\rangle|,
@@ -74,6 +92,34 @@ Wavevectors include propagation directions. Each atom contributes a unit
 phasor: aligned phasors give $Q=1$, while phase cancellation reduces $Q$.
 Exact lattice QPM aligns the phases at the site centres; finite displacements
 within the wells leave a phase spread and reduce the coherent overlap.
+Thus Eq.~\eqref{eq:phasor-overlap} evaluates the general definition in
+Eq.~\eqref{eq:overlap} for equal coupling magnitudes; nonuniform magnitudes
+must instead be retained in the normalized coefficients $u_j,v_j$.
+
+The coefficients $u_j,v_j$ are not polarization vectors. For a chosen sequence
+of internal states $|g\rangle\to|e\rangle\to|r\rangle$, polarization enters the
+individual dipole couplings through
+\[
+ g_{780}\propto\langle e|\mathbf d\cdot\boldsymbol\epsilon_{780}|g\rangle,
+ \qquad
+ \Om\propto\langle r|\mathbf d\cdot\boldsymbol\epsilon_{\rm blue}|e\rangle.
+\]
+Here $\mathbf d$ is the atomic dipole operator and $\boldsymbol\epsilon$ denotes
+a field polarization. There is no general factor
+$\boldsymbol\epsilon_{780}^*\cdot\boldsymbol\epsilon_{\rm blue}$ requiring the
+two polarizations to be parallel. Relative to the quantization axis, $\pi$
+light drives $\Delta m=0$ and $\sigma^\pm$ light drives $\Delta m=\pm1$.
+The experiment of Ref.~\cite{kumar} uses $\pi$ polarization for both the 780 nm
+and blue fields, with the four field polarizations chosen to close the
+angular-momentum loop (Extended Data Fig.~2).
+Different, spatially uniform polarizations can leave
+Eq.~\eqref{eq:phasor-overlap} unchanged if both paths still address the same
+internal Rydberg state with uniform coupling magnitudes; the dipole factors
+then change the coupling strengths. If the paths instead address orthogonal
+internal states, their full overlap is zero even with perfect spatial phase
+matching. Multiple participating sublevels require coefficients such as
+$u_{j,\alpha},v_{j,\alpha}$ in the enlarged basis $|j,\alpha\rangle$, and may
+require additional dynamical channels beyond the present model.
 
 There are many possible collective modes, but only two directly addressed
 profiles in this model. After choosing the overall phase so that
@@ -159,13 +205,38 @@ Here $n$ labels the spatial harmonic. Even at $T=0$, zero-point motion gives
 $b_n<1$ for $n\ne0$; deeper trapping increases the overlap. The harmonic approximation
 requires localization near a minimum.
 
-Exact matching, $\Delta\mathbf k=\sum_i n_i\mathbf K_i$, aligns the phases of
-occupied site centres. Independent displacements within sites then give
+To connect the density harmonics to the state overlap, write each position as
+$\mathbf r=\mathbf R+\boldsymbol\xi$, where $\mathbf R$ is a lattice-site centre
+and $\boldsymbol\xi$ is the displacement within its well. Equation~\eqref{eq:phasor-overlap}
+then reads
+\[
+ Q=\left|\left\langle
+ e^{i\Delta\mathbf k\cdot\mathbf R}
+ e^{i\Delta\mathbf k\cdot\boldsymbol\xi}\right\rangle\right|.
+\]
+At exact matching, $\Delta\mathbf k=\sum_i n_i\mathbf K_i$, moving between
+lattice-site centres changes the phase by an integer multiple of $2\pi$.
+The site-centre factor is therefore a common phase and drops out of the
+magnitude. For identical well distributions and independent displacements
+along the lattice axes, the remaining average factorizes:
+\[
+ Q=\left|\left\langle e^{i\sum_i n_iK_i\xi_i}\right\rangle\right|
+  =\prod_i\left|\left\langle e^{in_iK_i\xi_i}\right\rangle\right|.
+\]
+Each factor is the density harmonic in Eq.~\eqref{eq:bn}, giving
 \begin{equation}
  Q=\prod_i b_{n_i,i};\qquad Q=b_{2,x}\; b_{2,y}
  \quad\text{for two second-order axes}.
  \label{eq:qproduct}
 \end{equation}
+This is the same $Q$ defined in Eq.~\eqref{eq:overlap}, evaluated under the
+uniform-coupling, exact-matching, and independent-displacement assumptions.
+The two patterns agree in phase at all site centres; finite within-well
+displacements cause the remaining mismatch. Negative harmonic orders give
+the same magnitude, $b_{-n,i}=b_{n,i}$, so orders $(2,-2)$ yield
+$b_{2,x}b_{2,y}$ as well. For a finite sample of atoms, the density average is
+the continuum or ensemble approximation to the discrete sum in
+Eq.~\eqref{eq:phasor-overlap}.
 For example, take optical and blue beams along $+x$, UV along $+y$, and
 $\mathbf K_i=K\hat{\mathbf i}$. The target $(n_x,n_y)=(2,-2)$ requires
 \begin{equation}
